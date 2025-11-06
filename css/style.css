@@ -2745,7 +2745,7 @@ img {
 .heading-wrapper {
   flex-flow: column;
   width: 100%;
-  max-width: 480px;
+  max-width: 880px;
   position: relative;
 }
 
@@ -4748,5 +4748,29 @@ img {
 
   #w-node-f19b1a86-9dea-1840-303c-07d2718aea40-a6fded02 {
     grid-area: span 1 / span 1 / span 1 / span 1;
+  }
+}
+/* Correzione overflow e spazi su mobile */
+@media (max-width: 768px) {
+  .hero-heading {
+    padding: 0 20px; /* aggiunge spazio ai lati */
+    box-sizing: border-box;
+  }
+
+  .hero-heading h1 {
+    font-size: 3rem; /* riduce leggermente la grandezza per evitare che esca */
+    line-height: 1.1;
+    word-break: break-word; /* forza l’andata a capo se serve */
+  }
+
+  .hero-caption {
+    font-size: 1rem;
+    margin-right: 20px;
+    margin-left: 10px;
+    overflow-wrap: break-word;
+  }
+
+  body, html {
+    overflow-x: hidden; /* blocca lo scroll orizzontale */
   }
 }
