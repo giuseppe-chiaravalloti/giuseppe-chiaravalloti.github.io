@@ -245,7 +245,7 @@
                         <div data-wf--info-block--variant="right"
                             class="info-block w-variant-c6723cf6-f98c-16bb-aef3-a9a5ed6363b9">
                             <div class="semibold-s info-block-name">Dove mi trovo:</div>
-                            <div class="semibold-l info-block-value">Calabria (CZ), Italia, Everywhere</div>
+                            <div class="semibold-l info-block-value">Calabria (CZ), Italia</div>
                         </div>
                         <div data-wf--info-block--variant="right"
                             class="info-block w-variant-c6723cf6-f98c-16bb-aef3-a9a5ed6363b9">
@@ -1131,24 +1131,29 @@
                     <div id="w-node-_73e13dfc-b210-5bc7-b5d7-f39e23141254-2314123d" class="contact-form">
                         <h3 class="h3">Scrivimi qui</h3>
                         <div class="form-block w-form">
-                            <form id="email-form" name="email-form" data-name="Email Form" method="get" class="form"
-                                data-wf-page-id="67daf0e9495d4f8da6fded02"
-                                data-wf-element-id="73e13dfc-b210-5bc7-b5d7-f39e23141258"
-                                data-turnstile-sitekey="0x4AAAAAAAQTptj2So4dx43e"><input class="form-input w-input"
-                                    maxlength="256" name="Name" data-name="Name" placeholder="Inserisci il tuo nome"
-                                    type="text" id="Name" required=""><input class="form-input w-input" maxlength="256"
-                                    name="Email" data-name="Email" placeholder="Inserisci la tua Email" type="email"
-                                    id="Email" required=""><textarea required="" placeholder="Come posso aiutarti?"
-                                    maxlength="5000" id="Message" name="Message" data-name="Message"
-                                    class="form-input text-area w-input"></textarea><input type="submit"
-                                    data-wait="Please wait..." class="button form-button w-button"
-                                    value="Invia messaggio">
+                            <form id="email-form" action="https://formspree.io/f/mnnladny" method="POST" class="form">
+
+                                <input class="form-input w-input" maxlength="256" name="name"
+                                    placeholder="Inserisci il tuo nome" type="text" required="">
+
+                                <input class="form-input w-input" maxlength="256" name="email"
+                                    placeholder="Inserisci la tua Email" type="email" required="">
+
+                                <textarea required="" placeholder="Come posso aiutarti?" maxlength="5000" name="message"
+                                    class="form-input text-area w-input"></textarea>
+
+                                <!-- Campo nascosto per un subject personalizzato -->
+                                <input type="hidden" name="_subject" value="Nuovo messaggio dal portfolio">
+
+                                <input type="submit" class="button form-button w-button" value="Invia messaggio">
                             </form>
+
                             <div class="success-message w-form-done">
                                 <div class="success-message-content">
                                     <div class="semibold-m success-message-text">Il tuo messaggio è stato inviato!</div>
                                 </div>
                             </div>
+
                             <div class="error-message w-form-fail">
                                 <div class="semibold-s">Oops, qualcosa è andato storto! Riprova ora.</div>
                             </div>

@@ -4986,18 +4986,21 @@ img {
 
   /* ICON BUTTONS PIÙ COMPATTI */
   .footer-buttons .icon-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 10px;     /* leggermente più piccolo per piccoli schermi */
-  flex-shrink: 0;
-}
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    /* leggermente più piccolo per piccoli schermi */
+    flex-shrink: 0;
+  }
 
-.footer-buttons .icon-button-media {
-  width: 18px;
-  height: 18px;
-  object-fit: contain; /* mantiene proporzioni */
-}
+  .footer-buttons .icon-button-media {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    /* mantiene proporzioni */
+  }
+
   /* FOOTER LEGAL - MEGLIO STRUTTURATO */
   .footer-legal {
     flex-direction: column;
@@ -5131,7 +5134,7 @@ h3,
 }
 
 .semibold-l {
-  font-size:15px !important;
+  font-size: 15px !important;
 }
 
 .semibold-m {
