@@ -1131,7 +1131,17 @@
                     <div id="w-node-_73e13dfc-b210-5bc7-b5d7-f39e23141254-2314123d" class="contact-form">
                         <h3 class="h3">Scrivimi qui</h3>
                         <div class="form-block w-form">
-                            <form id="email-form" action="https://formspree.io/f/mnnladny" method="POST" class="form">
+                            <form id="email-form" action="https://api.web3forms.com/submit" method="POST" class="form">
+
+                                <!-- Access Key -->
+                                <input type="hidden" name="access_key" value="9b812a21-d951-401b-b1df-d26b9225acd8">
+
+                                <!-- Redirect personalizzato -->
+                                <input type="hidden" name="redirect"
+                                    value="https://giuseppechiaravalloti.art/thankyouform.html">
+
+                                <!-- Subject personalizzato -->
+                                <input type="hidden" name="subject" value="Nuovo messaggio dal portfolio">
 
                                 <input class="form-input w-input" maxlength="256" name="name"
                                     placeholder="Inserisci il tuo nome" type="text" required="">
@@ -1141,10 +1151,6 @@
 
                                 <textarea required="" placeholder="Come posso aiutarti?" maxlength="5000" name="message"
                                     class="form-input text-area w-input"></textarea>
-
-                                <!-- Campo nascosto per un subject personalizzato -->
-                                <input type="hidden" name="_subject" value="Nuovo messaggio dal portfolio">
-                                <input type="hidden" name="_next" value="https://giuseppechiaravalloti.art/thankyouform.html">
 
                                 <input type="submit" class="button form-button w-button" value="Invia messaggio">
                             </form>
