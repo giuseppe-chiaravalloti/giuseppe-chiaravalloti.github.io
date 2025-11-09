@@ -4375,11 +4375,6 @@ img {
   .hero-text {
     max-width: 656px;
   }
-
-  .work-cover {
-    padding-top: 48px;
-    padding-left: 48px;
-  }
 }
 
 @media screen and (max-width: 767px) {
@@ -4728,8 +4723,7 @@ img {
   }
 
   .work-cover {
-    padding-top: 24px;
-    padding-left: 24px;
+    padding: 24px;
   }
 
   .work-overview {
