@@ -4084,14 +4084,13 @@ img {
 }
 
 .work-cover-image {
-  aspect-ratio: 1440 / 900;
+  aspect-ratio: 1300 / 900;
   border: 1px solid var(--black-opacity--7);
-  border-top-left-radius: var(--_sizes---radius--l-2);
+  border-radius: var(--_sizes---radius--l-2); /* ✅ Tutti gli angoli */
   box-shadow: 0 16px 20px 0 var(--black-opacity--5);
   object-fit: cover;
-  object-position: 0% 0%;
-  flex: none;
-  width: auto;
+  object-position: center center; /* ✅ Centrata */
+  width: 100%;
   height: 100%;
   display: block;
   overflow: hidden;
