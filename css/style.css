@@ -4974,14 +4974,31 @@ img {
 
 @media screen and (max-width: 767px) {
 
-  /* FOOTER BUTTONS - PREVIENE A CAPO */
+  /* FOOTER BUTTONS - IN LINEA SENZA SCHIACCIAMENTI */
   .footer-buttons {
     display: flex;
+    flex-direction: row;
     flex-wrap: nowrap;
-    /* Non va a capo */
-    gap: 8px;
+    gap: 10px;
     justify-content: flex-start;
     align-items: center;
+  }
+
+  /* BUTTON EMAIL - FLESSIBILE MA NON TROPPO STRETTO */
+  .footer-buttons .button {
+    flex: 1;
+    min-width: 0;
+    padding: 14px 16px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .footer-buttons .button .semibold-s {
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* ICON BUTTONS PIÙ COMPATTI */
@@ -4989,16 +5006,25 @@ img {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 10px;
-    /* leggermente più piccolo per piccoli schermi */
+    padding: 12px;
     flex-shrink: 0;
+    width: 44px;
+    height: 44px;
   }
 
   .footer-buttons .icon-button-media {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     object-fit: contain;
-    /* mantiene proporzioni */
+    flex-shrink: 0;
+  }
+
+  /* SOCIAL ICONS COMPATTE */
+  .social-icons {
+    gap: 8px;
+    flex-wrap: nowrap;
+    justify-content: center;
+    flex-shrink: 0;
   }
 
   /* FOOTER LEGAL - MEGLIO STRUTTURATO */
@@ -5012,28 +5038,38 @@ img {
     text-align: center;
     font-size: 12px;
   }
-
-  /* SOCIAL ICONS COMPATTE */
-  .social-icons {
-    gap: 8px;
-    flex-wrap: nowrap;
-    justify-content: center;
-  }
 }
 
 /* Per schermi molto piccoli */
 @media screen and (max-width: 479px) {
   .footer-buttons {
-    gap: 6px;
+    gap: 8px;
+  }
+
+  .footer-buttons .button {
+    padding: 12px 14px;
+  }
+
+  .footer-buttons .button .semibold-s {
+    font-size: 11px;
   }
 
   .footer-buttons .icon-button {
     padding: 10px;
+    width: 40px;
+    height: 40px;
   }
 
   .footer-buttons .icon-button-media {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* SCHERMI EXTRA PICCOLI */
+@media screen and (max-width: 380px) {
+  .footer-buttons .button .semibold-s {
+    font-size: 10px;
   }
 }
 
@@ -5120,29 +5156,28 @@ img {
   .h2 {
     font-size: 32px !important;
     text-align: center !important;
-    text-align: center !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
   }
-}
 
-h3,
-.h3 {
-  font-size: 18px !important;
-}
+  h3,
+  .h3 {
+    font-size: 18px !important;
+  }
 
-.semibold-l {
-  font-size: 15px !important;
-}
+  .semibold-l {
+    font-size: 15px !important;
+  }
 
-.semibold-m {
-  font-size: 15px !important;
-}
+  .semibold-m {
+    font-size: 15px !important;
+  }
 
-.value {
-  font-size: 40px !important;
+  .value {
+    font-size: 40px !important;
+  }
 }
 
 /* ========================================
