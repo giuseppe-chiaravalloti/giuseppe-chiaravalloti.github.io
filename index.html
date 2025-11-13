@@ -54,6 +54,10 @@
     <!-- Web App Manifest -->
     <link rel="manifest" href="manifest.json">
 
+    <!-- hCaptcha -->
+    <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
+
+
     <!-- Basic Style -->
     <style>
         body {
@@ -409,9 +413,8 @@
                         <!-- PER AGGIUNGERE CASE STUDIES TOGLIERE COMMENTI -->
                         <div role="listitem" class="works-item w-dyn-item"><a style="background-color:#ff8800"
                                 href="uniclub.html" target="_blank" class="work-block w-inline-block">
-                                <div class="work-block-cover-wrapper"><img
-                                        src="images/coverun.jpg" loading="lazy" alt="Uniclub"
-                                        class="work-block-cover"></div>
+                                <div class="work-block-cover-wrapper"><img src="images/coverun.jpg" loading="lazy"
+                                        alt="Uniclub" class="work-block-cover"></div>
                                 <div class="work-block-info-wrapper">
                                     <div class="work-block-info">
                                         <div data-wf--pill--variant="black"
@@ -1158,7 +1161,6 @@
                         <h3 class="h3">Scrivimi qui</h3>
                         <div class="form-block w-form">
                             <form id="email-form" action="https://api.web3forms.com/submit" method="POST" class="form">
-
                                 <!-- Access Key -->
                                 <input type="hidden" name="access_key" value="9b812a21-d951-401b-b1df-d26b9225acd8">
 
@@ -1170,17 +1172,19 @@
                                 <input type="hidden" name="subject" value="Nuovo messaggio dal portfolio">
 
                                 <input class="form-input w-input" maxlength="256" name="name"
-                                    placeholder="Inserisci il tuo nome" type="text" required="">
+                                    placeholder="Inserisci il tuo nome" type="text" required>
 
                                 <input class="form-input w-input" maxlength="256" name="email"
-                                    placeholder="Inserisci la tua Email" type="email" required="">
+                                    placeholder="Inserisci la tua Email" type="email" required>
 
-                                <textarea required="" placeholder="Come posso aiutarti?" maxlength="5000" name="message"
+                                <textarea required placeholder="Come posso aiutarti?" maxlength="5000" name="message"
                                     class="form-input text-area w-input"></textarea>
+
+                                <!-- hCaptcha -->
+                                <div class="h-captcha" data-sitekey="af908c9a-80b6-4c1a-a622-f26c21fad98e"></div>
 
                                 <input type="submit" class="button form-button w-button" value="Invia messaggio">
                             </form>
-
                             <div class="success-message w-form-done">
                                 <div class="success-message-content">
                                     <div class="semibold-m success-message-text">Il tuo messaggio è stato inviato!</div>
