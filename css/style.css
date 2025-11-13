@@ -3824,7 +3824,7 @@ img {
   -webkit-user-select: none;
   user-select: none;
   flex-flow: column;
-  height: 520px;
+  min-height: 520px;
   padding: 40px 32px;
   display: flex;
 }

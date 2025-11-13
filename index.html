@@ -1161,6 +1161,7 @@
                         <h3 class="h3">Scrivimi qui</h3>
                         <div class="form-block w-form">
                             <form id="email-form" action="https://api.web3forms.com/submit" method="POST" class="form">
+
                                 <!-- Access Key -->
                                 <input type="hidden" name="access_key" value="9b812a21-d951-401b-b1df-d26b9225acd8">
 
@@ -1180,8 +1181,9 @@
                                 <textarea required placeholder="Come posso aiutarti?" maxlength="5000" name="message"
                                     class="form-input text-area w-input"></textarea>
 
-                                <!-- hCaptcha -->
-                                <div class="h-captcha" data-sitekey="af908c9a-80b6-4c1a-a622-f26c21fad98e"></div>
+                                <!-- hCaptcha con margine -->
+                                <div class="h-captcha" data-sitekey="af908c9a-80b6-4c1a-a622-f26c21fad98e"
+                                    style="margin: 20px 0;"></div>
 
                                 <input type="submit" class="button form-button w-button" value="Invia messaggio">
                             </form>
