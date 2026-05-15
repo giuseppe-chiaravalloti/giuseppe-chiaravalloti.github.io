@@ -1423,7 +1423,11 @@
           correct: last.correct,
           wrong: last.wrong,
           skip: last.skip
-        }).catch(e => console.warn('Errore save history Supabase', e));
+        }).then(({ error }) => {
+          if (error) {
+            console.warn('Errore save history Supabase', error);
+          }
+        });
       }
     }
 
