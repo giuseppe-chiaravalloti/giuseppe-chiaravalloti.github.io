@@ -1859,16 +1859,30 @@
     // ============================================================
     function setMode(mode) {
       quizMode = mode;
-      document.getElementById('mode-official-panel').style.display = mode === 'official' ? 'block' : 'none';
-      document.getElementById('mode-custom-panel').style.display = mode === 'custom' ? 'block' : 'none';
-      document.getElementById('mode-review-panel').style.display = mode === 'review' ? 'block' : 'none';
-      document.getElementById('mode-btn-official').className = 'btn btn-sm ' + (mode === 'official' ? 'btn-primary' : 'btn-secondary');
-      document.getElementById('mode-btn-custom').className = 'btn btn-sm ' + (mode === 'custom' ? 'btn-primary' : 'btn-secondary');
-      document.getElementById('mode-btn-review').className = 'btn btn-sm ' + (mode === 'review' ? 'btn-primary' : 'btn-secondary');
-      // Update review count when switching to review mode
+
+      document.getElementById('mode-official-panel').style.display =
+        mode === 'official' ? 'block' : 'none';
+
+      document.getElementById('mode-custom-panel').style.display =
+        mode === 'custom' ? 'block' : 'none';
+
+      document.getElementById('mode-review-panel').style.display =
+        mode === 'review' ? 'block' : 'none';
+
+      document.getElementById('mode-btn-official').className =
+        'btn btn-sm ' + (mode === 'official' ? 'btn-primary' : 'btn-secondary');
+
+      document.getElementById('mode-btn-custom').className =
+        'btn btn-sm ' + (mode === 'custom' ? 'btn-primary' : 'btn-secondary');
+
+      document.getElementById('mode-btn-review').className =
+        'btn btn-sm ' + (mode === 'review' ? 'btn-primary' : 'btn-secondary');
+
       if (mode === 'review') {
         updateReviewQuestionsCount();
       }
+
+      document.getElementById('start-btn').disabled = false;
     }
 
     function updateOfficialPreview() {
