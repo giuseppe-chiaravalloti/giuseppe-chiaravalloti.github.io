@@ -2703,8 +2703,9 @@
         });
       } else {
         const chosen = document.getElementById('opt-' + letter);
-        const correct = document.getElementById('opt-' + q.corretta.toLowerCase());
-        if (letter.toUpperCase() === q.corretta) {
+        const correct = document.getElementById(
+          'opt-' + ((q.corretta || '').toLowerCase())
+        ); if (letter.toUpperCase() === q.corretta) {
           chosen.classList.add('correct');
         } else {
           chosen.classList.add('wrong');
