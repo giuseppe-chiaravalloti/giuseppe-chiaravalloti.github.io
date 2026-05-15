@@ -743,31 +743,31 @@
     }
 
     .db-toolbar {
-      display:flex;
-      gap:0.75rem;
-      flex-wrap:wrap;
-      align-items:center;
-      justify-content:space-between;
-      margin-bottom:1rem;
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
     }
 
     .db-toolbar-left {
-      display:flex;
-      gap:0.75rem;
-      flex-wrap:wrap;
-      align-items:center;
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      align-items: center;
     }
 
     .filter-chip {
-      border:1px solid var(--border);
-      background:var(--surface2);
-      color:var(--text-dim);
-      border-radius:999px;
-      padding:0.45rem 0.9rem;
-      font-size:0.78rem;
-      font-family:'DM Mono', monospace;
-      cursor:pointer;
-      transition:all 0.2s;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text-dim);
+      border-radius: 999px;
+      padding: 0.45rem 0.9rem;
+      font-size: 0.78rem;
+      font-family: 'DM Mono', monospace;
+      cursor: pointer;
+      transition: all 0.2s;
     }
 
     .filter-chip.active {
@@ -777,11 +777,11 @@
     }
 
     .db-question-preview {
-      display:-webkit-box;
-      -webkit-line-clamp:3;
-      -webkit-box-orient:vertical;
-      overflow:hidden;
-      line-height:1.5;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      line-height: 1.5;
     }
 
     /* TABS */
@@ -968,7 +968,10 @@
       outline: none;
       transition: border 0.2s;
     }
-    input[type=text]:focus { border-color: var(--accent); }
+
+    input[type=text]:focus {
+      border-color: var(--accent);
+    }
 
     @media (max-width: 600px) {
       .quiz-header {
@@ -979,8 +982,9 @@
         grid-template-columns: repeat(2, 1fr);
       }
     }
-    </style>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%234f7cff'/%3E%3Ctext x='50%25' y='50%25' font-size='10' fill='%23ffffff' dominant-baseline='middle' text-anchor='middle'%3EQ%3C/text%3E%3C/svg%3E">
+  </style>
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%234f7cff'/%3E%3Ctext x='50%25' y='50%25' font-size='10' fill='%23ffffff' dominant-baseline='middle' text-anchor='middle'%3EQ%3C/text%3E%3C/svg%3E">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
@@ -1036,9 +1040,12 @@
 
           <!-- MODE TOGGLE -->
           <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;flex-wrap:wrap">
-            <button class="btn btn-primary btn-sm" id="mode-btn-official" onclick="setMode('official')" style="flex:1;min-width:180px">🏛 Ufficiale (40 domande)</button>
-            <button class="btn btn-secondary btn-sm" id="mode-btn-custom" onclick="setMode('custom')" style="flex:1;min-width:180px">⚙️ Personalizzata</button>
-            <button class="btn btn-secondary btn-sm" id="mode-btn-review" onclick="setMode('review')" style="flex:1;min-width:180px">🎯 Ripassa errori</button>
+            <button class="btn btn-primary btn-sm" id="mode-btn-official" onclick="setMode('official')"
+              style="flex:1;min-width:180px">🏛 Ufficiale (40 domande)</button>
+            <button class="btn btn-secondary btn-sm" id="mode-btn-custom" onclick="setMode('custom')"
+              style="flex:1;min-width:180px">⚙️ Personalizzata</button>
+            <button class="btn btn-secondary btn-sm" id="mode-btn-review" onclick="setMode('review')"
+              style="flex:1;min-width:180px">🎯 Ripassa errori</button>
           </div>
 
           <!-- OFFICIAL MODE INFO -->
@@ -1063,7 +1070,9 @@
           <!-- CUSTOM MODE -->
           <div id="mode-custom-panel" style="display:none">
             <div style="margin-bottom:1.25rem">
-              <div style="font-size:0.82rem;color:var(--text-dim);margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:0.06em;">Categorie</div>
+              <div
+                style="font-size:0.82rem;color:var(--text-dim);margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:0.06em;">
+                Categorie</div>
               <div class="cat-list" id="cat-chips"></div>
             </div>
             <div class="config-row">
@@ -1085,11 +1094,14 @@
 
           <!-- REVIEW MODE -->
           <div id="mode-review-panel" style="display:none">
-            <div style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2);border-radius:10px;padding:1rem;margin-bottom:1.5rem">
+            <div
+              style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2);border-radius:10px;padding:1rem;margin-bottom:1.5rem">
               <div style="color:var(--green);font-weight:500;margin-bottom:0.5rem">🎯 Ripassa le domande sbagliate</div>
               <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.6">
-                <p>Questa modalità estrae tutte le domande che hai sbagliato o saltato nelle simulazioni precedenti, ordinate per frequenza di errore.</p>
-                <p style="margin-top:0.5rem">Le domande più sbagliate appariranno prima. Una domanda esce da questa lista quando la rispondi correttamente più volte.</p>
+                <p>Questa modalità estrae tutte le domande che hai sbagliato o saltato nelle simulazioni precedenti,
+                  ordinate per frequenza di errore.</p>
+                <p style="margin-top:0.5rem">Le domande più sbagliate appariranno prima. Una domanda esce da questa
+                  lista quando la rispondi correttamente più volte.</p>
               </div>
             </div>
             <div class="config-row">
@@ -1103,7 +1115,8 @@
                 <option value="final">✓ Finale (rivedo tutto alla fine)</option>
               </select>
             </div>
-            <div style="margin-top:1rem;padding:0.75rem;background:var(--surface2);border-radius:8px;border:1px solid var(--border);font-size:0.82rem;color:var(--text-dim)">
+            <div
+              style="margin-top:1rem;padding:0.75rem;background:var(--surface2);border-radius:8px;border:1px solid var(--border);font-size:0.82rem;color:var(--text-dim)">
               <span id="review-questions-count">0 domande sbagliate</span> disponibili per il ripasso
             </div>
           </div>
@@ -1137,10 +1150,18 @@
             Comunicazione_Istituzionale · Teoria_Comunicazione · Inglese · Logica · Situazionali · Uso_delle_tecnologie
           </div>
           <div style="margin-top:1rem">
-          <button class="btn btn-secondary btn-sm" onclick="downloadTemplate()">⬇ Scarica template CSV</button>
-          <button class="btn btn-secondary btn-sm" style="margin-left:0.5rem" onclick="exportBackup()">💾 Backup JSON</button>
-          <button class="btn btn-danger btn-sm" style="margin-left:0.5rem" onclick="confirmClear()">🗑 Svuota banca
-            dati</button>
+            <button class="btn btn-secondary btn-sm" onclick="downloadTemplate()">⬇ Scarica template CSV</button>
+            <button class="btn btn-secondary btn-sm" style="margin-left:0.5rem" onclick="exportBackup()">💾 Backup
+              JSON</button>
+            <button class="btn btn-secondary btn-sm" style="margin-left:0.5rem"
+              onclick="document.getElementById('json-import-input').click()">
+              📥 Importa backup JSON
+            </button>
+
+            <input type="file" id="json-import-input" accept=".json" style="display:none"
+              onchange="handleJSONImport(this)">
+            <button class="btn btn-danger btn-sm" style="margin-left:0.5rem" onclick="confirmClear()">🗑 Svuota banca
+              dati</button>
           </div>
         </div>
 
@@ -1204,9 +1225,12 @@
       <div class="quiz-actions">
         <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap">
           <button class="skip-link" onclick="skipQuestion()">Salta domanda →</button>
-          <button class="skip-link" onclick="openEditQuestionModal()" style="color:var(--gold)">✏️ Segnala errore</button>
-          <button class="skip-link" onclick="toggleFavoriteCurrentQuestion()" style="color:var(--accent2)">⭐ Preferita</button>
-          <button class="skip-link" onclick="toggleFlagCurrentQuestion()" style="color:var(--red)">🚩 Da eliminare</button>
+          <button class="skip-link" onclick="openEditQuestionModal()" style="color:var(--gold)">✏️ Segnala
+            errore</button>
+          <button class="skip-link" onclick="toggleFavoriteCurrentQuestion()" style="color:var(--accent2)">⭐
+            Preferita</button>
+          <button class="skip-link" onclick="toggleFlagCurrentQuestion()" style="color:var(--red)">🚩 Da
+            eliminare</button>
         </div>
         <div style="display:flex;gap:0.75rem">
           <button class="btn btn-secondary" onclick="confirmAbort()">Abbandona</button>
@@ -1275,7 +1299,8 @@
     <div class="modal">
       <h3>▶ Quiz interrotto</h3>
       <p>È stato trovato un quiz non completato. Vuoi riprendere da dove l'hai lasciato?</p>
-      <div id="resume-modal-info" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:1.5rem;font-size:0.9rem;color:var(--text-dim)">
+      <div id="resume-modal-info"
+        style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:1.5rem;font-size:0.9rem;color:var(--text-dim)">
         <div style="margin-bottom:0.5rem"><strong style="color:var(--text)">Informazioni sessione:</strong></div>
         <div>Domande: <span id="resume-total">0</span></div>
         <div>Progresso: <span id="resume-progress">0</span>%</div>
@@ -1349,7 +1374,11 @@
               efficace_alta: q.efficace_alta,
               efficace_neutra: q.efficace_neutra,
               efficace_bassa: q.efficace_bassa
-            }).catch(e => console.warn('Errore sync Supabase', e));
+            }).then(({ error }) => {
+              if (error) {
+                console.warn('Errore sync Supabase', error);
+              }
+            });
           }
         });
       }
@@ -1431,7 +1460,7 @@
     ];
     const OFFICIAL_COMPOSITION = {
       materie: { cats: MATERIE_CATS, total: 25 },
-      logica:  { cats: ['Logica'], total: 8 },
+      logica: { cats: ['Logica'], total: 8 },
       situazionali: { cats: ['Situazionali'], total: 7 }
     };
 
@@ -1772,7 +1801,7 @@
     // ============================================================
     window.addEventListener('DOMContentLoaded', async () => {
       loadTheme();
-      
+
       // Carica le domande da Supabase (o localStorage come fallback)
       await syncDBFromSupabase();
       await syncHistoryFromSupabase();
@@ -1786,7 +1815,7 @@
         document.getElementById('cfg-review-official').value = settings.reviewModeOfficial;
         document.getElementById('cfg-time-review').value = settings.timeMinutesReview || 60;
         document.getElementById('cfg-review-review').value = settings.reviewModeReview || 'immediate';
-        if (['official','custom','review'].includes(settings.mode)) {
+        if (['official', 'custom', 'review'].includes(settings.mode)) {
           setMode(settings.mode);
         }
       }
@@ -1809,7 +1838,7 @@
           const m = Math.floor(savedQuiz.timeLeft / 60);
           const s = savedQuiz.timeLeft % 60;
           document.getElementById('resume-time').textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-          
+
           // Show resume modal
           document.getElementById('resume-modal').classList.add('open');
         }
@@ -1854,20 +1883,20 @@
         const n = db.filter(q => q.macrocategoria === cat).length;
         totMatAvail += n;
         const col = catColor(cat);
-        lines.push(`<span style="color:${col}">■</span> ${cat.replace(/_/g,' ')}: <strong style="color:var(--text)">${n}</strong> disponibili`);
+        lines.push(`<span style="color:${col}">■</span> ${cat.replace(/_/g, ' ')}: <strong style="color:var(--text)">${n}</strong> disponibili`);
       });
       const matOk = totMatAvail >= 25;
-      lines.push(`→ Materie: <strong style="color:${matOk?'var(--green)':'var(--gold)'}">${Math.min(totMatAvail,25)}/25</strong> domande${!matOk?' (⚠ meno di 25 disponibili)':''}`);
+      lines.push(`→ Materie: <strong style="color:${matOk ? 'var(--green)' : 'var(--gold)'}">${Math.min(totMatAvail, 25)}/25</strong> domande${!matOk ? ' (⚠ meno di 25 disponibili)' : ''}`);
 
       // logica
       const nLog = db.filter(q => q.macrocategoria === 'Logica').length;
       const logOk = nLog >= 8;
-      lines.push(`<span style="color:${catColor('Logica')}">■</span> Logica: <strong style="color:var(--text)">${nLog}</strong> disponibili → <strong style="color:${logOk?'var(--green)':'var(--gold)'}">${Math.min(nLog,8)}/8</strong>${!logOk?' (⚠ meno di 8)':''}`);
+      lines.push(`<span style="color:${catColor('Logica')}">■</span> Logica: <strong style="color:var(--text)">${nLog}</strong> disponibili → <strong style="color:${logOk ? 'var(--green)' : 'var(--gold)'}">${Math.min(nLog, 8)}/8</strong>${!logOk ? ' (⚠ meno di 8)' : ''}`);
 
       // situazionali
       const nSit = db.filter(q => q.macrocategoria === 'Situazionali').length;
       const sitOk = nSit >= 7;
-      lines.push(`<span style="color:${catColor('Situazionali')}">■</span> Situazionali: <strong style="color:var(--text)">${nSit}</strong> disponibili → <strong style="color:${sitOk?'var(--green)':'var(--gold)'}">${Math.min(nSit,7)}/7</strong>${!nSit?' (⚠ meno di 7)':''}`);
+      lines.push(`<span style="color:${catColor('Situazionali')}">■</span> Situazionali: <strong style="color:var(--text)">${nSit}</strong> disponibili → <strong style="color:${sitOk ? 'var(--green)' : 'var(--gold)'}">${Math.min(nSit, 7)}/7</strong>${!nSit ? ' (⚠ meno di 7)' : ''}`);
 
       el.innerHTML = lines.join('<br>');
     }
@@ -2048,6 +2077,88 @@
     }
 
     // ============================================================
+    // JSON IMPORT
+    // ============================================================
+
+    function handleJSONImport(input) {
+
+      const file = input.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = async e => {
+
+        try {
+
+          const parsed = JSON.parse(e.target.result);
+
+          let questions = [];
+
+          if (Array.isArray(parsed)) {
+            questions = parsed;
+          } else if (parsed.questions) {
+            questions = parsed.questions;
+          }
+
+          if (!questions.length) {
+            showToast('❌ Backup JSON non valido');
+            return;
+          }
+
+          localStorage.setItem(
+            DB_KEY,
+            JSON.stringify(questions)
+          );
+
+          if (supabaseClient) {
+
+            const payload = questions.map(q => ({
+              id: q.id,
+              domanda: q.domanda,
+              risposta_a: q.risposta_a,
+              risposta_b: q.risposta_b,
+              risposta_c: q.risposta_c,
+              risposta_d: q.risposta_d,
+              corretta: q.corretta,
+              macrocategoria: q.macrocategoria,
+              is_situazionale: q.isSituazionale || q.is_situazionale || false,
+              efficace_alta: q.efficace_alta,
+              efficace_neutra: q.efficace_neutra,
+              efficace_bassa: q.efficace_bassa
+            }));
+
+            const { error } = await supabaseClient
+              .from('questions')
+              .upsert(payload);
+
+            if (error) {
+              console.warn(error);
+            }
+          }
+
+          updateHomeStats();
+          renderCatChips();
+          renderDBTable();
+          updateOfficialPreview();
+          updateReviewQuestionsCount();
+
+          showToast(`✅ Importate ${questions.length} domande`);
+
+        } catch (err) {
+
+          console.error(err);
+          showToast('❌ Errore import JSON');
+
+        }
+
+      };
+
+      reader.readAsText(file, 'UTF-8');
+
+    }
+
+    // ============================================================
     // DB TABLE
     // ============================================================
     function renderDBTable() {
@@ -2110,7 +2221,7 @@
       `;
 
       Object.entries(cats)
-        .sort((a,b) => b[1] - a[1])
+        .sort((a, b) => b[1] - a[1])
         .forEach(([cat, count]) => {
 
           const flaggedCount = filtered.filter(q =>
@@ -2136,8 +2247,8 @@
                 </span>
 
                 ${flaggedCount
-                  ? `<span class="flag-badge" style="margin-left:0.5rem">${flaggedCount} 🚩</span>`
-                  : ''}
+              ? `<span class="flag-badge" style="margin-left:0.5rem">${flaggedCount} 🚩</span>`
+              : ''}
               </td>
 
               <td>
@@ -2261,7 +2372,7 @@
 
       db.forEach((q, i) => {
 
-        const opts = ['A','B','C','D']
+        const opts = ['A', 'B', 'C', 'D']
           .filter(l => q['risposta_' + l.toLowerCase()]);
 
         html += `
@@ -2293,12 +2404,11 @@
 
             <td>
 
-              ${
-                q.isSituazionale
+              ${q.isSituazionale
 
-                ?
+            ?
 
-                `
+            `
                 <select
                   class="bulk-correct"
                   data-id="${q.id}"
@@ -2315,9 +2425,9 @@
                 </select>
                 `
 
-                :
+            :
 
-                `
+            `
                 <select
                   class="bulk-correct"
                   data-id="${q.id}"
@@ -2333,14 +2443,14 @@
 
                 </select>
                 `
-              }
+          }
 
             </td>
 
             <td>
               ${q.flaggedForDeletion
-                ? '<span class="flag-badge">🚩 Da eliminare</span>'
-                : '<span style="color:var(--text-dim);font-size:0.78rem">Attiva</span>'}
+            ? '<span class="flag-badge">🚩 Da eliminare</span>'
+            : '<span style="color:var(--text-dim);font-size:0.78rem">Attiva</span>'}
             </td>
 
             <td>
@@ -2424,15 +2534,15 @@
 
         // Build official composition: proportional materie + fixed logica + fixed situazionali
         const materiePool = db.filter(q => MATERIE_CATS.includes(q.macrocategoria));
-        const logicaPool  = db.filter(q => q.macrocategoria === 'Logica');
-        const sitPool     = db.filter(q => q.macrocategoria === 'Situazionali');
+        const logicaPool = db.filter(q => q.macrocategoria === 'Logica');
+        const sitPool = db.filter(q => q.macrocategoria === 'Situazionali');
 
         // Proportional distribution across materie subcategories
         const catCounts = {};
         MATERIE_CATS.forEach(c => {
           catCounts[c] = db.filter(q => q.macrocategoria === c).length;
         });
-        const totAvail = Object.values(catCounts).reduce((a,b) => a+b, 0);
+        const totAvail = Object.values(catCounts).reduce((a, b) => a + b, 0);
         const need = Math.min(25, totAvail);
 
         let picked = [];
@@ -2501,12 +2611,12 @@
         const s = quiz.timeLeft % 60;
         el.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
         el.className = 'timer' + (quiz.timeLeft < 120 ? ' danger' : quiz.timeLeft < 300 ? ' warn' : '');
-        
+
         // Autosave ogni 10 secondi
         if (quiz.timeLeft % 10 === 0) {
           saveQuizSession();
         }
-        
+
         if (quiz.timeLeft <= 0) { clearInterval(timerInterval); finishQuiz(); }
       }, 1000);
     }
@@ -2934,7 +3044,7 @@
     function renderEditModal(q) {
       const allCats = [...new Set(getDB().map(x => x.macrocategoria))].filter(Boolean);
       const isSit = q.isSituazionale;
-      const opts = ['a','b','c','d'].filter(l => q['risposta_'+l]);
+      const opts = ['a', 'b', 'c', 'd'].filter(l => q['risposta_' + l]);
 
       let html = `
         <div style="margin-bottom:1rem">
@@ -2945,7 +3055,7 @@
         <div style="margin-bottom:1rem">
           <div style="font-size:0.8rem;color:var(--text-dim);margin-bottom:0.4rem">Categoria</div>
           <select id="edit-cat" style="width:100%">
-            ${allCats.map(c => `<option value="${c}" ${c===q.macrocategoria?'selected':''}>${c.replace(/_/g,' ')}</option>`).join('')}
+            ${allCats.map(c => `<option value="${c}" ${c === q.macrocategoria ? 'selected' : ''}>${c.replace(/_/g, ' ')}</option>`).join('')}
           </select>
         </div>
       `;
@@ -2957,9 +3067,9 @@
             <div style="display:flex;flex-direction:column;gap:0.5rem">
               ${opts.map(l => `
                 <label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;padding:0.6rem 0.8rem;border-radius:8px;border:1px solid var(--border);background:var(--surface2)">
-                  <input type="radio" name="edit-correct" value="${l.toUpperCase()}" ${l.toUpperCase()===q.corretta?'checked':''} style="accent-color:var(--accent)">
+                  <input type="radio" name="edit-correct" value="${l.toUpperCase()}" ${l.toUpperCase() === q.corretta ? 'checked' : ''} style="accent-color:var(--accent)">
                   <span style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--accent)">${l.toUpperCase()}</span>
-                  <span style="font-size:0.85rem">${q['risposta_'+l]}</span>
+                  <span style="font-size:0.85rem">${q['risposta_' + l]}</span>
                 </label>
               `).join('')}
             </div>
@@ -2972,11 +3082,11 @@
             ${opts.map(l => `
               <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem">
                 <span style="font-family:'DM Mono',monospace;font-size:0.78rem;color:var(--accent);min-width:20px">${l.toUpperCase()}</span>
-                <span style="font-size:0.83rem;flex:1">${q['risposta_'+l]}</span>
+                <span style="font-size:0.83rem;flex:1">${q['risposta_' + l]}</span>
                 <select id="sit-level-${l}" style="width:auto;font-size:0.78rem;padding:0.3rem 0.5rem">
-                  <option value="alta" ${q.efficace_alta===l.toUpperCase()?'selected':''}>★ Più efficace</option>
-                  <option value="neutra" ${q.efficace_neutra===l.toUpperCase()?'selected':''}>◇ Neutra</option>
-                  <option value="bassa" ${q.efficace_bassa===l.toUpperCase()?'selected':''}>✗ Meno efficace</option>
+                  <option value="alta" ${q.efficace_alta === l.toUpperCase() ? 'selected' : ''}>★ Più efficace</option>
+                  <option value="neutra" ${q.efficace_neutra === l.toUpperCase() ? 'selected' : ''}>◇ Neutra</option>
+                  <option value="bassa" ${q.efficace_bassa === l.toUpperCase() ? 'selected' : ''}>✗ Meno efficace</option>
                 </select>
               </div>
             `).join('')}
@@ -3003,9 +3113,9 @@
         const sel = document.querySelector('input[name="edit-correct"]:checked');
         if (sel) q.corretta = sel.value;
       } else {
-        const opts = ['a','b','c','d'].filter(l => q['risposta_'+l]);
+        const opts = ['a', 'b', 'c', 'd'].filter(l => q['risposta_' + l]);
         opts.forEach(l => {
-          const val = document.getElementById('sit-level-'+l)?.value;
+          const val = document.getElementById('sit-level-' + l)?.value;
           if (val === 'alta') q.efficace_alta = l.toUpperCase();
           else if (val === 'neutra') q.efficace_neutra = l.toUpperCase();
           else if (val === 'bassa') q.efficace_bassa = l.toUpperCase();
