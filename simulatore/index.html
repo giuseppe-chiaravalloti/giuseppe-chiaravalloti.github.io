@@ -173,6 +173,62 @@
       border-color: var(--accent);
     }
 
+    .logout-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      height: 40px;
+      border-radius: 8px;
+      padding: 0 0.75rem;
+      cursor: pointer;
+      font-size: 0.8rem;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .logout-btn:hover {
+      color: var(--text);
+      border-color: var(--accent);
+    }
+
+    .auth-card {
+      max-width: 420px;
+      margin: 8vh auto 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.22);
+    }
+
+    .auth-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.8rem;
+      line-height: 1.1;
+      margin-bottom: 0.45rem;
+      color: var(--text);
+    }
+
+    .auth-sub {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+
+    .auth-form {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .auth-note {
+      color: var(--text-dim);
+      font-size: 0.78rem;
+      line-height: 1.55;
+    }
+
     /* ── SCREENS ── */
     .screen {
       display: none;
@@ -1573,12 +1629,26 @@
       <div class="logo">Quiz<span>Gov</span></div>
       <div style="display:flex;align-items:center;gap:0.6rem;">
         <div class="badge">Funzionario della Comunicazione — MI</div>
+        <button class="logout-btn" id="logout-btn" onclick="logout()" title="Esci dall'account">Esci</button>
         <button class="theme-toggle" onclick="toggleTheme()" title="Attiva/disattiva modalità chiara">🌙</button>
       </div>
     </header>
+
+    <!-- LOGIN SCREEN -->
+    <div class="screen" id="screen-login">
+      <div class="auth-card">
+        <div class="auth-title">Accedi al simulatore</div>
+        <div class="auth-sub">Ricevi un link via email e sincronizza storico, preferiti, domande eliminate e statistiche su tutti i dispositivi.</div>
+        <form class="auth-form" onsubmit="loginWithMagicLink(event)">
+          <input type="email" id="auth-email" placeholder="La tua email" autocomplete="email" required>
+          <button class="btn btn-primary" type="submit" id="auth-submit">Invia magic link</button>
+          <div class="auth-note" id="auth-message">Apri il link dallo stesso browser oppure dal dispositivo su cui vuoi studiare.</div>
+        </form>
+      </div>
+    </div>
  
     <!-- HOME SCREEN -->
-    <div class="screen active" id="screen-home">
+    <div class="screen" id="screen-home">
  
       <!-- STATS -->
       <div class="stats-grid" id="home-stats">
@@ -1887,49 +1957,136 @@
     }
 
     const DB_KEY = 'quizgov_db';
+    const GLOBAL_DB_KEY = 'quizgov_questions_global';
+    const USER_STATE_KEY = 'quizgov_user_question_state';
     const HISTORY_KEY = 'quizgov_history';
     const SETTINGS_KEY = 'quizgov_settings';
     const SESSION_KEY = 'quizgov_session';
     const STATS_KEY = 'quizgov_stats'; // Per statistiche aggregate per domanda
+    let currentUser = null;
 
-    // Sincronizzazione DB: getDB rimane sincrona (localStorage), aggiungiamo una sync asincrona da Supabase
+    function userKey(base) {
+      return currentUser?.id ? `${base}_${currentUser.id}` : base;
+    }
+
+    function getLocalJSON(key, fallback) {
+      try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch { return fallback; }
+    }
+
+    function setLocalJSON(key, value) {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+
     function getDB() {
-      try { return JSON.parse(localStorage.getItem(DB_KEY)) || []; } catch { return []; }
+      return getLocalJSON(userKey(DB_KEY), []);
+    }
+
+    function getUserQuestionState() {
+      return getLocalJSON(userKey(USER_STATE_KEY), {});
+    }
+
+    function saveUserQuestionState(state) {
+      setLocalJSON(userKey(USER_STATE_KEY), state);
+    }
+
+    function defaultQuestionState() {
+      return {
+        favorite: false,
+        flaggedForDeletion: false,
+        shown: 0,
+        correct: 0,
+        wrong: 0,
+        skipped: 0,
+        mistakeCount: 0,
+        lastSeen: null
+      };
+    }
+
+    function normalizeQuestionState(row = {}) {
+      return {
+        favorite: Boolean(row.favorite),
+        flaggedForDeletion: Boolean(row.flaggedForDeletion ?? row.flagged_for_deletion),
+        shown: Number(row.shown || 0),
+        correct: Number(row.correct || 0),
+        wrong: Number(row.wrong || 0),
+        skipped: Number(row.skipped || 0),
+        mistakeCount: Number(row.mistakeCount ?? row.mistake_count ?? 0),
+        lastSeen: row.lastSeen ?? row.last_seen ?? null
+      };
+    }
+
+    function stripPersonalQuestionFields(q) {
+      const {
+        favorite,
+        flaggedForDeletion,
+        shown,
+        correct,
+        wrong,
+        skipped,
+        mistakeCount,
+        lastSeen,
+        ...question
+      } = q;
+      return question;
+    }
+
+    function mergeQuestionsWithState(questions, state) {
+      return questions.map(q => ({
+        ...q,
+        ...normalizeQuestionState(state[q.id])
+      }));
+    }
+
+    async function fetchAllQuestions() {
+      const allData = [];
+      const chunkSize = 1000;
+      let from = 0;
+      let finished = false;
+
+      while (!finished) {
+        const { data, error } = await supabaseClient
+          .from('questions')
+          .select('*')
+          .range(from, from + chunkSize - 1);
+
+        if (error) throw error;
+        if (data && data.length) {
+          allData.push(...data);
+          from += chunkSize;
+          finished = data.length < chunkSize;
+        } else {
+          finished = true;
+        }
+      }
+
+      return allData;
+    }
+
+    async function fetchUserQuestionState() {
+      if (!supabaseClient || !currentUser) return getUserQuestionState();
+      const { data, error } = await supabaseClient
+        .from('user_question_state')
+        .select('*')
+        .eq('user_id', currentUser.id);
+      if (error) throw error;
+
+      const state = {};
+      (data || []).forEach(row => {
+        state[row.question_id] = normalizeQuestionState(row);
+      });
+      saveUserQuestionState(state);
+      return state;
     }
 
     async function syncDBFromSupabase() {
       if (!supabaseClient) return getDB();
       try {
-        const allData = [];
-        const chunkSize = 1000;
-        let from = 0;
-        let finished = false;
-
-        while (!finished) {
-          const { data, error } = await supabaseClient
-            .from('questions')
-            .select('*')
-            .range(from, from + chunkSize - 1);
-
-          if (error) throw error;
-
-          if (data && data.length) {
-            allData.push(...data);
-            from += chunkSize;
-
-            if (data.length < chunkSize) {
-              finished = true;
-            }
-          } else {
-            finished = true;
-          }
-        }
-
-        const data = allData;
-        if (data) {
-          localStorage.setItem(DB_KEY, JSON.stringify(data));
-          return data;
-        }
+        const questions = await fetchAllQuestions();
+        const state = await fetchUserQuestionState();
+        const merged = mergeQuestionsWithState(questions, state);
+        setLocalJSON(GLOBAL_DB_KEY, questions.map(stripPersonalQuestionFields));
+        setLocalJSON(userKey(DB_KEY), merged);
+        return merged;
       } catch (e) {
         console.warn('Errore caricamento da Supabase, uso localStorage', e);
       }
@@ -1937,53 +2094,65 @@
     }
 
     function saveDB(arr) {
-      localStorage.setItem(DB_KEY, JSON.stringify(arr));
-      if (supabaseClient) {
-        // Salva le modifiche su Supabase in background
-        // Upsert in chunks of 200 to avoid potential issues with large payloads
-        const payload = arr
-          .filter(q => q.id)
-          .map(q => ({
-            id: q.id,
-            domanda: q.domanda,
-            risposta_a: q.risposta_a,
-            risposta_b: q.risposta_b,
-            risposta_c: q.risposta_c,
-            risposta_d: q.risposta_d,
-            corretta: q.corretta,
-            macrocategoria: q.macrocategoria,
-            is_situazionale: isSituationalQuestion(q),
-            efficace_alta: q.efficace_alta,
-            efficace_neutra: q.efficace_neutra,
-            efficace_bassa: q.efficace_bassa
-          }));
-
-        const chunkSize = 200;
-        for (let i = 0; i < payload.length; i += chunkSize) {
-          const chunk = payload.slice(i, i + chunkSize);
-          supabaseClient.from('questions').upsert(chunk).then(({ error }) => {
-            if (error) {
-              console.warn(`Errore sync Supabase chunk ${Math.floor(i / chunkSize) + 1}:`, error);
-            } else {
-              console.log(`Sync Supabase chunk ${Math.floor(i / chunkSize) + 1}/${Math.ceil(payload.length / chunkSize)} completato (${chunk.length} elementi)`);
-            }
-          });
-        }
-      }
+      const questions = arr.map(stripPersonalQuestionFields);
+      setLocalJSON(GLOBAL_DB_KEY, questions);
+      setLocalJSON(userKey(DB_KEY), mergeQuestionsWithState(questions, getUserQuestionState()));
     }
 
-    // getHistory sincrono (localStorage) + funzione di sync asincrona
+    function questionStatePayload(questionId, state) {
+      return {
+        user_id: currentUser.id,
+        question_id: questionId,
+        favorite: Boolean(state.favorite),
+        flagged_for_deletion: Boolean(state.flaggedForDeletion),
+        shown: Number(state.shown || 0),
+        correct: Number(state.correct || 0),
+        wrong: Number(state.wrong || 0),
+        skipped: Number(state.skipped || 0),
+        mistake_count: Number(state.mistakeCount || 0),
+        last_seen: state.lastSeen
+      };
+    }
+
+    async function persistQuestionState(questionId, patch) {
+      const state = getUserQuestionState();
+      const next = {
+        ...defaultQuestionState(),
+        ...(state[questionId] || {}),
+        ...patch
+      };
+
+      state[questionId] = next;
+      saveUserQuestionState(state);
+
+      const db = getDB();
+      const idx = db.findIndex(q => q.id === questionId);
+      if (idx !== -1) {
+        db[idx] = { ...db[idx], ...next };
+        setLocalJSON(userKey(DB_KEY), db);
+      }
+
+      if (!supabaseClient || !currentUser) return;
+      const { error } = await supabaseClient
+        .from('user_question_state')
+        .upsert(questionStatePayload(questionId, next), { onConflict: 'user_id,question_id' });
+      if (error) console.warn('Errore salvataggio stato domanda Supabase', error);
+    }
+
     function getHistory() {
-      try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || []; } catch { return []; }
+      return getLocalJSON(userKey(HISTORY_KEY), []);
     }
 
     async function syncHistoryFromSupabase() {
-      if (!supabaseClient) return getHistory();
+      if (!supabaseClient || !currentUser) return getHistory();
       try {
-        const { data, error } = await supabaseClient.from('sessions').select('*').order('created_at', { ascending: false });
+        const { data, error } = await supabaseClient
+          .from('sessions')
+          .select('*')
+          .eq('user_id', currentUser.id)
+          .order('created_at', { ascending: false });
         if (error) throw error;
         if (data) {
-          const localNonOfficial = getHistory().filter(h => h.mode && h.mode !== 'official');
           const formatted = data.map(row => ({
             date: row.date,
             total: row.total,
@@ -1991,11 +2160,11 @@
             correct: row.correct,
             wrong: row.wrong,
             skip: row.skip,
-            mode: 'official'
+            mode: row.mode || 'official',
+            pctCorrect: row.pct_correct
           }));
-          const merged = [...formatted, ...localNonOfficial];
-          localStorage.setItem(HISTORY_KEY, JSON.stringify(merged));
-          return merged;
+          setLocalJSON(userKey(HISTORY_KEY), formatted.slice().reverse());
+          return getHistory();
         }
       } catch (e) {
         console.warn('Errore caricamento history da Supabase, uso localStorage', e);
@@ -2004,17 +2173,19 @@
     }
 
     function saveHistory(arr) {
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
-      if (supabaseClient && arr.length > 0) {
+      setLocalJSON(userKey(HISTORY_KEY), arr);
+      if (supabaseClient && currentUser && arr.length > 0) {
         const last = arr[arr.length - 1]; // Ultimo test
-        if (last.mode && last.mode !== 'official') return;
         supabaseClient.from('sessions').insert({
+          user_id: currentUser.id,
           date: last.date,
           total: last.total,
           score: last.score,
           correct: last.correct,
           wrong: last.wrong,
-          skip: last.skip
+          skip: last.skip,
+          mode: last.mode || 'official',
+          pct_correct: last.pctCorrect ?? null
         }).then(({ error }) => {
           if (error) {
             console.warn('Errore save history Supabase', error);
@@ -2028,13 +2199,36 @@
     }
     function saveSettings(obj) { localStorage.setItem(SETTINGS_KEY, JSON.stringify(obj)); }
     function getSession() {
-      try { return JSON.parse(localStorage.getItem(SESSION_KEY)) || null; } catch { return null; }
+      return getLocalJSON(userKey(SESSION_KEY), null);
     }
-    function saveSession(obj) { obj ? localStorage.setItem(SESSION_KEY, JSON.stringify(obj)) : localStorage.removeItem(SESSION_KEY); }
+    function saveSession(obj) { obj ? setLocalJSON(userKey(SESSION_KEY), obj) : localStorage.removeItem(userKey(SESSION_KEY)); }
     function getStats() {
-      try { return JSON.parse(localStorage.getItem(STATS_KEY)) || {}; } catch { return {}; }
+      const state = getUserQuestionState();
+      const stats = {};
+      Object.keys(state).forEach(questionId => {
+        const q = normalizeQuestionState(state[questionId]);
+        stats[questionId] = {
+          shown: q.shown,
+          correct: q.correct,
+          wrong: q.wrong,
+          skipped: q.skipped,
+          mistakeCount: q.mistakeCount,
+          lastSeen: q.lastSeen
+        };
+      });
+      return stats;
     }
-    function saveStats(obj) { localStorage.setItem(STATS_KEY, JSON.stringify(obj)); }
+    function saveStats(obj) {
+      const state = getUserQuestionState();
+      Object.keys(obj || {}).forEach(questionId => {
+        state[questionId] = {
+          ...defaultQuestionState(),
+          ...(state[questionId] || {}),
+          ...obj[questionId]
+        };
+      });
+      saveUserQuestionState(state);
+    }
 
     // ============================================================
     // SCORING CONFIG
@@ -2125,6 +2319,7 @@
       q.lastSeen = new Date().toISOString();
       stats[questionId] = q;
       saveStats(stats);
+      persistQuestionState(questionId, q);
     }
 
     /**
@@ -2294,7 +2489,8 @@
       }
 
       db[idx].favorite = !db[idx].favorite;
-      saveDB(db);
+      setLocalJSON(userKey(DB_KEY), db);
+      persistQuestionState(questionId, { favorite: db[idx].favorite });
 
       // Aggiorna il bottone nel quiz se aperto
       if (quiz) {
@@ -2396,12 +2592,99 @@
     let currentCategoryView = null;
     let flaggedOnlyView = false;
     let favoriteOnlyView = false;
+    let authListenerReady = false;
+
+    // ============================================================
+    // AUTH
+    // ============================================================
+    function showLoginScreen(message = '') {
+      document.getElementById('logout-btn').style.display = 'none';
+      showScreen('screen-login');
+      if (message) {
+        const el = document.getElementById('auth-message');
+        if (el) el.textContent = message;
+      }
+    }
+
+    function showAuthenticatedApp() {
+      document.getElementById('logout-btn').style.display = 'flex';
+      showScreen('screen-home');
+    }
+
+    function setupAuthListener() {
+      if (!supabaseClient || authListenerReady) return;
+      authListenerReady = true;
+      supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' && session?.user && !currentUser) {
+          currentUser = session.user;
+          window.history.replaceState({}, document.title, window.location.pathname);
+          window.location.reload();
+        }
+        if (event === 'SIGNED_OUT') {
+          currentUser = null;
+          showLoginScreen('Accesso terminato. Inserisci la tua email per rientrare.');
+        }
+      });
+    }
+
+    async function loginWithMagicLink(event) {
+      event.preventDefault();
+      if (!supabaseClient) {
+        showLoginScreen('Supabase non è disponibile in questo momento.');
+        return;
+      }
+
+      const email = document.getElementById('auth-email').value.trim();
+      const btn = document.getElementById('auth-submit');
+      const msg = document.getElementById('auth-message');
+      btn.disabled = true;
+      btn.textContent = 'Invio...';
+
+      const redirectTo = window.location.href.split('#')[0].split('?')[0];
+      const { error } = await supabaseClient.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: redirectTo }
+      });
+
+      btn.disabled = false;
+      btn.textContent = 'Invia magic link';
+      if (error) {
+        msg.textContent = 'Invio non riuscito. Controlla la mail e riprova.';
+        console.warn('Errore magic link Supabase', error);
+        return;
+      }
+      msg.textContent = 'Link inviato. Controlla la tua email per accedere.';
+    }
+
+    async function logout() {
+      if (supabaseClient) await supabaseClient.auth.signOut();
+      currentUser = null;
+      showLoginScreen('Sei uscito dal tuo account.');
+    }
 
     // ============================================================
     // INIT
     // ============================================================
     window.addEventListener('DOMContentLoaded', async () => {
       loadTheme();
+      setupAuthListener();
+
+      if (!supabaseClient) {
+        showLoginScreen('Supabase non è disponibile: impossibile autenticarsi ora.');
+        return;
+      }
+
+      const { data, error } = await supabaseClient.auth.getSession();
+      if (error) console.warn('Errore sessione Supabase', error);
+      currentUser = data?.session?.user || null;
+
+      if (!currentUser) {
+        showLoginScreen();
+        return;
+      }
+
+      window.history.replaceState({}, document.title, window.location.pathname);
+      showAuthenticatedApp();
 
       // Carica le domande da Supabase (o localStorage come fallback)
       await syncDBFromSupabase();
@@ -2666,9 +2949,7 @@
           risposta_c: get('risposta_c'),
           risposta_d: get('risposta_d'),
           macrocategoria: macro,
-          isSituazionale: isSit,
-          flaggedForDeletion: false,
-          favorite: false
+          isSituazionale: isSit
         };
 
         if (isSit) {
@@ -2722,44 +3003,8 @@
             return;
           }
 
-          localStorage.setItem(
-            DB_KEY,
-            JSON.stringify(questions)
-          );
-
-          if (supabaseClient) {
-
-            const payload = questions.map(q => ({
-              id: q.id,
-              domanda: q.domanda,
-              risposta_a: q.risposta_a,
-              risposta_b: q.risposta_b,
-              risposta_c: q.risposta_c,
-              risposta_d: q.risposta_d,
-              corretta: q.corretta,
-              macrocategoria: q.macrocategoria,
-              is_situazionale: q.isSituazionale || q.is_situazionale || false,
-              efficace_alta: q.efficace_alta,
-              efficace_neutra: q.efficace_neutra,
-              efficace_bassa: q.efficace_bassa
-            }));
-
-            // Upsert in chunks of 200 to avoid potential issues with large payloads
-            const chunkSize = 200;
-            for (let i = 0; i < payload.length; i += chunkSize) {
-              const chunk = payload.slice(i, i + chunkSize);
-              try {
-                const { error } = await supabaseClient.from('questions').upsert(chunk);
-                if (error) {
-                  console.warn(`Errore upsert chunk ${Math.floor(i / chunkSize) + 1}:`, error);
-                } else {
-                  console.log(`Chunk ${Math.floor(i / chunkSize) + 1}/${Math.ceil(payload.length / chunkSize)} upsertato con successo (${chunk.length} elementi)`);
-                }
-              } catch (err) {
-                console.error(`Errore inaspettato durante l'upsert del chunk ${Math.floor(i / chunkSize) + 1}:`, err);
-              }
-            }
-          }
+          questions = questions.map(stripPersonalQuestionFields);
+          saveDB(questions);
 
           updateHomeStats();
           renderCatChips();
@@ -3562,16 +3807,16 @@
     }
 
     async function resetHistory() {
-      localStorage.removeItem(HISTORY_KEY);
+      localStorage.removeItem(userKey(HISTORY_KEY));
       updateHomeStats();
       renderHistory();
 
-      if (supabaseClient) {
+      if (supabaseClient && currentUser) {
         try {
           const { error } = await supabaseClient
             .from('sessions')
             .delete()
-            .neq('date', '');
+            .eq('user_id', currentUser.id);
 
           if (error) throw error;
         } catch (e) {
@@ -3589,8 +3834,13 @@
         'Elimina domanda',
         'Vuoi davvero eliminare questa domanda?',
         () => {
-          const db = getDB().filter(q => q.id !== id);
-          saveDB(db);
+          const db = getDB();
+          const q = db.find(x => x.id === id);
+          if (q) {
+            q.flaggedForDeletion = true;
+            setLocalJSON(userKey(DB_KEY), db);
+            persistQuestionState(id, { flaggedForDeletion: true });
+          }
           updateHomeStats();
           renderCatChips();
           updateOfficialPreview();
@@ -3598,7 +3848,7 @@
           if (currentCategoryView === cat) {
             showCatDetail(cat);
           }
-          showToast('🗑 Domanda eliminata');
+          showToast('🚩 Domanda contrassegnata');
         }
       );
     }
@@ -3634,9 +3884,10 @@
       db.forEach(q => {
         if (ids.includes(q.id)) {
           q.flaggedForDeletion = true;
+          persistQuestionState(q.id, { flaggedForDeletion: true });
         }
       });
-      saveDB(db);
+      setLocalJSON(userKey(DB_KEY), db);
 
       updateHomeStats();
       renderCatChips();
@@ -3669,10 +3920,15 @@
         `Vuoi eliminare ${ids.length} domande?`,
         () => {
 
-          const db = getDB()
-            .filter(q => !ids.includes(q.id));
+          const db = getDB();
+          db.forEach(q => {
+            if (ids.includes(q.id)) {
+              q.flaggedForDeletion = true;
+              persistQuestionState(q.id, { flaggedForDeletion: true });
+            }
+          });
 
-          saveDB(db);
+          setLocalJSON(userKey(DB_KEY), db);
 
           updateHomeStats();
           renderCatChips();
@@ -3682,7 +3938,7 @@
             showCatDetail(cat);
           }
 
-          showToast(`🗑 ${ids.length} domande eliminate`);
+          showToast(`🚩 ${ids.length} domande contrassegnate`);
         }
       );
     }
@@ -3909,7 +4165,8 @@
 
       db[idx].flaggedForDeletion = !db[idx].flaggedForDeletion;
 
-      saveDB(db);
+      setLocalJSON(userKey(DB_KEY), db);
+      persistQuestionState(id, { flaggedForDeletion: db[idx].flaggedForDeletion });
       updateHomeStats();
       renderDBTable();
       updateOfficialPreview();
@@ -3942,7 +4199,8 @@
     function exportBackup() {
       const payload = {
         exportedAt: new Date().toISOString(),
-        questions: getDB(),
+        questions: getDB().map(stripPersonalQuestionFields),
+        userQuestionState: getUserQuestionState(),
         history: getHistory()
       };
 
