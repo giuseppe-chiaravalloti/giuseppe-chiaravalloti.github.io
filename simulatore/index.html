@@ -2499,25 +2499,37 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
       return getHistory();
     }
 
-    function saveHistory(arr) {
+    async function saveHistory(arr) {
       setLocalJSON(userKey(HISTORY_KEY), arr);
       if (supabaseClient && currentUser && arr.length > 0) {
         const last = arr[arr.length - 1]; // Ultimo test
-        supabaseClient.from('sessions').insert({
-          user_id: currentUser.id,
-          date: last.date,
-          total: last.total,
-          score: last.score,
-          correct: last.correct,
-          wrong: last.wrong,
-          skip: last.skip,
-          mode: last.mode || 'official',
-          pct_correct: last.pctCorrect ?? null
-        }).then(({ error }) => {
+        console.log('[HISTORY] Saving session:', last);
+        try {
+          const { error } = await supabaseClient
+            .from('sessions')
+            .insert({
+              user_id: currentUser.id,
+              date: last.date,
+              total: last.total,
+              score: last.score,
+              correct: last.correct,
+              wrong: last.wrong,
+              skip: last.skip,
+              mode: last.mode || 'official',
+              pct_correct: last.pctCorrect ?? null
+            });
+
           if (error) {
-            console.warn('Errore save history Supabase', error);
+            console.error('[HISTORY] Save failed:', error);
+            showToast('⚠️ Storico non sincronizzato');
+            return;
           }
-        });
+
+          console.log('[HISTORY] Save completed');
+        } catch (error) {
+          console.error('[HISTORY] Save failed:', error);
+          showToast('⚠️ Storico non sincronizzato');
+        }
       }
     }
 
@@ -4117,7 +4129,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
     // ============================================================
     // FINISH
     // ============================================================
-    function finishQuiz() {
+    async function finishQuiz() {
       clearInterval(timerInterval);
       showScreen('screen-results');
 
@@ -4159,7 +4171,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
         // Save history
         const hist = getHistory();
         hist.push({ date: dateStr, total: quiz.total, score: score30, correct, wrong, skip, mode: quizMode });
-        saveHistory(hist);
+        await saveHistory(hist);
 
         updateHomeStats();
         renderHistory();
@@ -4185,7 +4197,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
 
         const hist = getHistory();
         hist.push({ date: dateStr, total: quiz.total, score: rawScore, correct, wrong, skip, mode: quizMode, pctCorrect });
-        saveHistory(hist);
+        await saveHistory(hist);
 
         updateHomeStats();
         renderHistory();
