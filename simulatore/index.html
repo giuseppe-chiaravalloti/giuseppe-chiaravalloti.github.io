@@ -1592,6 +1592,7 @@
     }
 
     @media (max-width: 360px) {
+
       :root[data-theme="dark"],
       :root:not([data-theme="light"]),
       :root[data-theme="light"] {
@@ -1648,24 +1649,30 @@
     <div class="screen" id="screen-login">
       <div class="auth-card">
         <div class="auth-title">Accedi al simulatore</div>
-        <div class="auth-sub">Entra con email e password per sincronizzare storico, preferiti, domande eliminate e statistiche su tutti i dispositivi.</div>
+        <div class="auth-sub">Entra con email e password per sincronizzare storico, preferiti, domande eliminate e
+          statistiche su tutti i dispositivi.</div>
         <div class="auth-switch">
-          <button class="btn btn-primary btn-sm" type="button" id="auth-login-tab" onclick="setAuthMode('login')">Accedi</button>
-          <button class="btn btn-secondary btn-sm" type="button" id="auth-signup-tab" onclick="setAuthMode('signup')">Registrati</button>
+          <button class="btn btn-primary btn-sm" type="button" id="auth-login-tab"
+            onclick="setAuthMode('login')">Accedi</button>
+          <button class="btn btn-secondary btn-sm" type="button" id="auth-signup-tab"
+            onclick="setAuthMode('signup')">Registrati</button>
         </div>
         <form class="auth-form" onsubmit="submitEmailPasswordAuth(event)">
           <input type="email" id="auth-email" placeholder="La tua email" autocomplete="email" required>
-          <input type="password" id="auth-password" placeholder="Password" autocomplete="current-password" minlength="6" required>
+          <input type="password" id="auth-password" placeholder="Password" autocomplete="current-password" minlength="6"
+            required>
           <button class="btn btn-primary" type="submit" id="auth-submit">Accedi</button>
-          <button class="btn btn-secondary btn-sm" type="button" onclick="resetPassword()" id="auth-reset-btn">Password dimenticata?</button>
-          <div class="auth-note" id="auth-message">Usa la password del tuo account. Se arrivi dal vecchio accesso via email, imposta una password con il reset.</div>
+          <button class="btn btn-secondary btn-sm" type="button" onclick="resetPassword()" id="auth-reset-btn">Password
+            dimenticata?</button>
+          <div class="auth-note" id="auth-message">Usa la password del tuo account. Se arrivi dal vecchio accesso via
+            email, imposta una password con il reset.</div>
         </form>
       </div>
     </div>
- 
+
     <!-- HOME SCREEN -->
     <div class="screen" id="screen-home">
- 
+
       <!-- STATS -->
       <div class="stats-grid" id="home-stats">
         <div class="stat-box">
@@ -1689,27 +1696,30 @@
           <div class="stat-label">Da eliminare</div>
         </div>
       </div>
- 
+
       <!-- TABS -->
       <div class="tabs">
         <button class="tab active" onclick="switchTab('simulate')">🎯 Simula</button>
         <button class="tab" onclick="switchTab('manage')">📚 Banca Dati</button>
         <button class="tab" onclick="switchTab('history')">📊 Storico</button>
       </div>
- 
+
       <!-- TAB: SIMULATE -->
       <div id="tab-simulate">
         <div class="card">
           <div class="card-title">Configura la simulazione</div>
           <div class="card-sub">Scegli la modalità di composizione del test</div>
- 
+
           <!-- MODE TOGGLE -->
           <div class="mode-btn-group">
-            <button class="btn btn-primary btn-sm" id="mode-btn-official" onclick="setMode('official')">🏛 Ufficiale (40 domande)</button>
-            <button class="btn btn-secondary btn-sm" id="mode-btn-custom" onclick="setMode('custom')">⚙️ Personalizzata</button>
-            <button class="btn btn-secondary btn-sm" id="mode-btn-review" onclick="setMode('review')">🎯 Ripassa errori</button>
+            <button class="btn btn-primary btn-sm" id="mode-btn-official" onclick="setMode('official')">🏛 Ufficiale (40
+              domande)</button>
+            <button class="btn btn-secondary btn-sm" id="mode-btn-custom" onclick="setMode('custom')">⚙️
+              Personalizzata</button>
+            <button class="btn btn-secondary btn-sm" id="mode-btn-review" onclick="setMode('review')">🎯 Ripassa
+              errori</button>
           </div>
- 
+
           <!-- OFFICIAL MODE INFO -->
           <div id="mode-official-panel">
             <div class="csv-info" style="margin-top:0;margin-bottom:1.25rem">
@@ -1728,11 +1738,12 @@
               </select>
             </div>
           </div>
- 
+
           <!-- CUSTOM MODE -->
           <div id="mode-custom-panel" style="display:none">
             <div style="margin-bottom:1.25rem">
-              <div style="font-size:0.78rem;color:var(--text-dim);margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:0.06em;">
+              <div
+                style="font-size:0.78rem;color:var(--text-dim);margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:0.06em;">
                 Categorie</div>
               <div class="cat-list" id="cat-chips"></div>
             </div>
@@ -1752,14 +1763,17 @@
               </select>
             </div>
           </div>
- 
+
           <!-- REVIEW MODE -->
           <div id="mode-review-panel" style="display:none">
-            <div style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.18);border-radius:10px;padding:1rem;margin-bottom:1.25rem">
+            <div
+              style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.18);border-radius:10px;padding:1rem;margin-bottom:1.25rem">
               <div style="color:var(--green);font-weight:500;margin-bottom:0.4rem">🎯 Ripassa le domande sbagliate</div>
               <div style="font-size:0.83rem;color:var(--text-dim);line-height:1.6">
-                <p>Questa modalità estrae tutte le domande che hai sbagliato o saltato nelle simulazioni precedenti, ordinate per frequenza di errore.</p>
-                <p style="margin-top:0.4rem">Le domande più sbagliate appariranno prima. Una domanda esce da questa lista quando la rispondi correttamente più volte.</p>
+                <p>Questa modalità estrae tutte le domande che hai sbagliato o saltato nelle simulazioni precedenti,
+                  ordinate per frequenza di errore.</p>
+                <p style="margin-top:0.4rem">Le domande più sbagliate appariranno prima. Una domanda esce da questa
+                  lista quando la rispondi correttamente più volte.</p>
               </div>
             </div>
             <div class="config-row">
@@ -1773,16 +1787,18 @@
                 <option value="final">✓ Finale (rivedo tutto alla fine)</option>
               </select>
             </div>
-            <div style="margin-top:0.85rem;padding:0.7rem 0.9rem;background:var(--surface2);border-radius:8px;border:1px solid var(--border);font-size:0.8rem;color:var(--text-dim)">
+            <div
+              style="margin-top:0.85rem;padding:0.7rem 0.9rem;background:var(--surface2);border-radius:8px;border:1px solid var(--border);font-size:0.8rem;color:var(--text-dim)">
               <span id="review-questions-count">0 domande sbagliate</span> disponibili per il ripasso
             </div>
           </div>
- 
+
           <div class="divider"></div>
-          <button class="btn btn-primary" onclick="startQuiz()" id="start-btn" style="width:100%">Inizia simulazione →</button>
+          <button class="btn btn-primary" onclick="startQuiz()" id="start-btn" style="width:100%">Inizia simulazione
+            →</button>
         </div>
       </div>
- 
+
       <!-- TAB: MANAGE -->
       <div id="tab-manage" style="display:none">
         <div class="card">
@@ -1792,7 +1808,8 @@
             <input type="file" accept=".csv" id="csv-input" onchange="handleCSV(this)">
             <div class="upload-icon">📂</div>
             <div class="upload-text">Trascina un file CSV o <strong>clicca per sceglierlo</strong></div>
-            <div style="font-size:0.73rem;color:var(--text-dim);margin-top:0.4rem">Formato: UTF-8, separatore virgola o punto-e-virgola</div>
+            <div style="font-size:0.73rem;color:var(--text-dim);margin-top:0.4rem">Formato: UTF-8, separatore virgola o
+              punto-e-virgola</div>
           </div>
           <div class="csv-info">
             <strong style="color:var(--text)">Formato CSV richiesto — colonne obbligatorie:</strong><br>
@@ -1800,11 +1817,12 @@
             <code>risposta_d</code> (opzionale) · <code>corretta</code> · <code>macrocategoria</code><br><br>
             <strong style="color:var(--text)">Per i quesiti situazionali</strong> usa <code>macrocategoria</code> =
             <code>Situazionali</code> e sostituisci <code>corretta</code> con:<br>
-            <code>efficace_alta</code> · <code>efficace_neutra</code> · <code>efficace_bassa</code> (lettere A/B/C/D)<br><br>
+            <code>efficace_alta</code> · <code>efficace_neutra</code> · <code>efficace_bassa</code> (lettere
+            A/B/C/D)<br><br>
             <strong style="color:var(--text)">Categorie standard:</strong> Diritto_Amministrativo ·
             Comunicazione_Istituzionale · Teoria_Comunicazione · Inglese · Logica · Situazionali · Uso_delle_tecnologie
           </div>
- 
+
           <!-- Manage buttons in a responsive grid -->
           <div class="manage-btn-grid">
             <button class="btn btn-secondary btn-sm" onclick="downloadTemplate()">⬇ Scarica template CSV</button>
@@ -1814,9 +1832,10 @@
             </button>
             <button class="btn btn-danger btn-sm" onclick="confirmClear()">🗑 Svuota banca dati</button>
           </div>
-          <input type="file" id="json-import-input" accept=".json" style="display:none" onchange="handleJSONImport(this)">
+          <input type="file" id="json-import-input" accept=".json" style="display:none"
+            onchange="handleJSONImport(this)">
         </div>
- 
+
         <div class="card">
           <div class="card-title">Domande in banca dati</div>
           <div style="margin:0.85rem 0">
@@ -1830,7 +1849,7 @@
           </div>
         </div>
       </div>
- 
+
       <!-- TAB: HISTORY -->
       <div id="tab-history" style="display:none">
         <div class="card">
@@ -1847,7 +1866,7 @@
         </div>
       </div>
     </div><!-- end screen-home -->
- 
+
     <!-- QUIZ SCREEN -->
     <div class="screen" id="screen-quiz">
       <div class="quiz-header">
@@ -1857,7 +1876,7 @@
       <div class="progress-bar">
         <div class="progress-fill" id="progress-fill" style="width:0%"></div>
       </div>
- 
+
       <div class="question-card">
         <div class="question-meta">
           <span class="q-num" id="q-num">#1</span>
@@ -1865,15 +1884,16 @@
         </div>
         <div class="question-text" id="q-text">Testo della domanda</div>
       </div>
- 
+
       <ul class="options-list" id="options-list"></ul>
- 
+
       <!-- Fixed bottom bar on mobile, inline on desktop -->
       <div class="quiz-actions">
         <div class="quiz-actions-secondary">
           <button class="skip-link" onclick="skipQuestion()">Salta →</button>
           <button class="skip-link" onclick="openEditQuestionModal()" style="color:var(--gold)">✏️ Errore</button>
-          <button class="skip-link" onclick="toggleFavoriteCurrentQuestion()" style="color:var(--accent2)">⭐ Preferita</button>
+          <button class="skip-link" onclick="toggleFavoriteCurrentQuestion()" style="color:var(--accent2)">⭐
+            Preferita</button>
           <button class="skip-link" onclick="toggleFlagCurrentQuestion()" style="color:var(--red)">🚩 Elimina</button>
         </div>
         <div class="quiz-actions-primary">
@@ -1882,7 +1902,7 @@
         </div>
       </div>
     </div>
- 
+
     <!-- RESULTS SCREEN -->
     <div class="screen" id="screen-results">
       <div class="card" style="text-align:center">
@@ -1896,23 +1916,23 @@
         </div>
         <div class="result-pills">
           <div class="pill pill-green" id="res-correct">✓ 0 corrette</div>
-          <div class="pill pill-red"   id="res-wrong">✗ 0 errate</div>
-          <div class="pill pill-gray"  id="res-skip">— 0 saltate</div>
+          <div class="pill pill-red" id="res-wrong">✗ 0 errate</div>
+          <div class="pill pill-gray" id="res-skip">— 0 saltate</div>
         </div>
         <div id="res-outcome" style="font-size:0.95rem;margin-bottom:1.25rem;font-weight:500"></div>
         <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
           <button class="btn btn-secondary" onclick="goHome()">← Home</button>
-          <button class="btn btn-primary"   onclick="startQuiz()">Ripeti simulazione</button>
+          <button class="btn btn-primary" onclick="startQuiz()">Ripeti simulazione</button>
         </div>
       </div>
- 
+
       <div class="card">
         <div class="card-title" style="margin-bottom:1rem">Revisione risposte</div>
         <div class="review-list" id="review-list"></div>
       </div>
     </div>
   </div><!-- end .app -->
- 
+
   <!-- MODAL -->
   <div class="modal-overlay" id="modal">
     <div class="modal">
@@ -1924,7 +1944,7 @@
       </div>
     </div>
   </div>
- 
+
   <!-- EDIT QUESTION MODAL -->
   <div class="modal-overlay" id="edit-modal">
     <div class="modal" style="max-width:560px">
@@ -1933,17 +1953,18 @@
       <div id="edit-modal-body"></div>
       <div class="modal-actions" style="margin-top:1.25rem">
         <button class="btn btn-secondary" onclick="closeEditModal()">Annulla</button>
-        <button class="btn btn-primary"   onclick="saveQuestionEdit()">💾 Salva</button>
+        <button class="btn btn-primary" onclick="saveQuestionEdit()">💾 Salva</button>
       </div>
     </div>
   </div>
- 
+
   <!-- RESUME QUIZ MODAL -->
   <div class="modal-overlay" id="resume-modal">
     <div class="modal">
       <h3>▶ Quiz interrotto</h3>
       <p>È stato trovato un quiz non completato. Vuoi riprendere da dove l'hai lasciato?</p>
-      <div id="resume-modal-info" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.9rem;margin-bottom:1.25rem;font-size:0.88rem;color:var(--text-dim)">
+      <div id="resume-modal-info"
+        style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.9rem;margin-bottom:1.25rem;font-size:0.88rem;color:var(--text-dim)">
         <div style="margin-bottom:0.4rem"><strong style="color:var(--text)">Informazioni sessione:</strong></div>
         <div>Domande: <span id="resume-total">0</span></div>
         <div>Progresso: <span id="resume-progress">0</span>%</div>
@@ -1951,11 +1972,11 @@
       </div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="discardQuizSession()">🗑 Scarta</button>
-        <button class="btn btn-primary"   onclick="resumeQuiz()">▶ Riprendi</button>
+        <button class="btn btn-primary" onclick="resumeQuiz()">▶ Riprendi</button>
       </div>
     </div>
   </div>
- 
+
   <div id="toast"></div>
 
   <script>
@@ -2343,7 +2364,7 @@
           campiInviati: Object.keys(globalFields),
           dettagli: globalFields
         });
-        
+
         const { data, error } = await supabaseClient
           .from('questions')
           .update(globalFields)
@@ -2372,7 +2393,7 @@
 
         logQuestionUpdate(questionId, globalFields, true);
         console.info(`[QUESTION_UPDATE] UPDATE completato con successo per domanda ${questionId}`);
-        
+
         // Aggiorna cache locale con SOLO i campi che sono stati persistiti su Supabase
         const db = getDB();
         const idx = db.findIndex(q => q.id === questionId);
@@ -2405,7 +2426,7 @@
 
       try {
         console.info(`[GLOBAL_DELETE] Avviando soft delete globale per domanda ${questionId}`);
-        
+
         const { data, error } = await supabaseClient
           .from('questions')
           .update({ deleted_globally: true, updated_at: new Date().toISOString() })
@@ -2527,8 +2548,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
 
           console.log('[HISTORY] Save completed');
         } catch (error) {
-          console.error('[HISTORY] Save failed:', error);
-          showToast('⚠️ Storico non sincronizzato');
+          console.error('[HISTORY] Save failed FULL:', JSON.stringify(error, null, 2)); showToast('⚠️ Storico non sincronizzato');
         }
       }
     }
@@ -2968,7 +2988,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
         ? 'Crea un account con password di almeno 6 caratteri.'
         : isReset
           ? 'Inserisci una nuova password di almeno 6 caratteri.'
-        : 'Usa la password del tuo account. Se arrivi dal vecchio accesso via email, imposta una password con il reset.';
+          : 'Usa la password del tuo account. Se arrivi dal vecchio accesso via email, imposta una password con il reset.';
     }
 
     function setupAuthListener() {
@@ -3827,8 +3847,8 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
               ${isQuestionDeleted(q)
             ? '<span class="flag-badge">🗑 Eliminata</span>'
             : q.flaggedForDeletion
-            ? '<span class="flag-badge">🚩 Da eliminare</span>'
-            : '<span style="color:var(--text-dim);font-size:0.78rem">Attiva</span>'}
+              ? '<span class="flag-badge">🚩 Da eliminare</span>'
+              : '<span style="color:var(--text-dim);font-size:0.78rem">Attiva</span>'}
             </td>
 
             <td>
@@ -4600,7 +4620,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
 
       // Raccoglie tutti gli aggiornamenti per il log
       const globalUpdates = {};
-      
+
       if (q.domanda !== newQuestionText) {
         globalUpdates.domanda = newQuestionText;
         q.domanda = newQuestionText;
