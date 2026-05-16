@@ -1997,7 +1997,26 @@
     }
 
     function setLocalJSON(key, value) {
+      if (key === GLOBAL_DB_KEY && Array.isArray(value) && value.length === 0) {
+        console.warn('[DB] Scrittura cache globale bloccata: rifiutato array vuoto per', key);
+        return;
+      }
+      if (key === GLOBAL_DB_KEY && Array.isArray(value)) {
+        console.info(`[DB] Scrivo cache globale ${key}: ${value.length} domande`);
+      }
       localStorage.setItem(key, JSON.stringify(value));
+    }
+
+    function saveGlobalQuestionsCache(questions, source) {
+      if (!Array.isArray(questions) || questions.length === 0) {
+        console.warn(`[DB] Cache globale non aggiornata da ${source}: payload vuoto o non valido`, questions);
+        return false;
+      }
+
+      const cleanQuestions = questions.map(stripPersonalQuestionFields);
+      console.info(`[DB] Cache globale aggiornata da ${source}: ${cleanQuestions.length} domande`);
+      setLocalJSON(GLOBAL_DB_KEY, cleanQuestions);
+      return true;
     }
 
     function getDB() {
@@ -2080,8 +2099,14 @@
           .select('*')
           .range(from, from + chunkSize - 1);
 
-        if (error) throw error;
-        if (data && data.length) {
+        if (error) {
+          console.warn(`[DB] Errore fetch questions range ${from}-${from + chunkSize - 1}`, error);
+          throw error;
+        }
+
+        console.info(`[DB] Supabase questions range ${from}-${from + chunkSize - 1}: ${Array.isArray(data) ? data.length : 'null'} righe`);
+
+        if (Array.isArray(data) && data.length) {
           allData.push(...data);
           from += chunkSize;
           finished = data.length < chunkSize;
@@ -2090,6 +2115,7 @@
         }
       }
 
+      console.info(`[DB] Supabase questions totale ricevuto: ${allData.length} righe`);
       return allData;
     }
 
@@ -2116,14 +2142,15 @@
         const questions = await fetchAllQuestions();
         const state = await fetchUserQuestionState();
 
-        if (!questions.length && cachedDB.length) {
-          console.warn('Supabase ha restituito 0 domande: mantengo la cache locale esistente.');
+        if (!Array.isArray(questions) || questions.length === 0) {
+          console.warn(`[DB] Supabase ha restituito ${Array.isArray(questions) ? 0 : 'null'} domande: cache locale preservata (${cachedDB.length} domande).`);
           return cachedDB;
         }
 
         const merged = mergeQuestionsWithState(questions, state);
-        setLocalJSON(GLOBAL_DB_KEY, questions.map(stripPersonalQuestionFields));
+        saveGlobalQuestionsCache(questions, 'syncDBFromSupabase');
         setLocalJSON(userKey(DB_KEY), merged);
+        console.info(`[DB] Cache utente aggiornata da Supabase: ${merged.length} domande`);
         return merged;
       } catch (e) {
         console.warn('Errore caricamento da Supabase, uso localStorage', e);
@@ -2133,7 +2160,7 @@
 
     function saveDB(arr) {
       const questions = arr.map(stripPersonalQuestionFields);
-      setLocalJSON(GLOBAL_DB_KEY, questions);
+      saveGlobalQuestionsCache(questions, 'saveDB');
       setLocalJSON(userKey(DB_KEY), mergeQuestionsWithState(questions, getUserQuestionState()));
     }
 
