@@ -2221,6 +2221,190 @@
       if (error) console.warn('Errore salvataggio stato domanda Supabase', error);
     }
 
+    // ============================================================
+    // GLOBAL QUESTION PERSISTENCE — Modifiche persistenti su public.questions
+    // ============================================================
+
+    /**
+     * Funzione helper per loggare gli update delle domande
+     */
+    function logQuestionUpdate(questionId, changedFields, success, error = null) {
+      const timestamp = new Date().toISOString();
+      const logEntry = {
+        timestamp,
+        questionId,
+        changedFields: Object.keys(changedFields),
+        success,
+        error: error ? String(error) : null
+      };
+      console.info('[QUESTION_UPDATE]', logEntry);
+      return logEntry;
+    }
+
+    /**
+     * Funzione helper per loggare soft delete globale
+     */
+    function logGlobalDelete(questionId, success, error = null) {
+      const timestamp = new Date().toISOString();
+      const logEntry = {
+        timestamp,
+        questionId,
+        action: 'deleted_globally',
+        success,
+        error: error ? String(error) : null
+      };
+      console.info('[GLOBAL_DELETE]', logEntry);
+      return logEntry;
+    }
+
+    /**
+     * Persiste modifiche di domanda su Supabase (public.questions).
+     * NON usa DELETE fisico, opera sempre via UPDATE.
+     * @param {string} questionId - ID della domanda da modificare
+     * @param {object} updates - Oggetto con i campi da aggiornare
+     * @returns {Promise<{success: boolean, error?: string}>}
+     */
+    async function persistQuestionGlobal(questionId, updates) {
+      if (!supabaseClient) {
+        console.error('[QUESTION_UPDATE] Supabase non disponibile, solo localStorage aggiornato');
+        return { success: false, error: 'Supabase non disponibile' };
+      }
+
+      // Filtra campi di stato personale che non devono andare su questions
+      const globalFields = {};
+      const personalFields = ['favorite', 'flaggedForDeletion', 'deleted', 'shown', 'correct', 'wrong', 'skipped', 'mistakeCount', 'lastSeen'];
+      
+      Object.entries(updates).forEach(([key, value]) => {
+        if (!personalFields.includes(key)) {
+          globalFields[key] = value;
+        }
+      });
+
+      if (Object.keys(globalFields).length === 0) {
+        console.info('[QUESTION_UPDATE] Nessun campo globale da aggiornare per domanda', questionId);
+        return { success: true, message: 'Nessun campo globale da modificare' };
+      }
+
+      try {
+        console.info(`[QUESTION_UPDATE] Iniziando UPDATE su questions per ID ${questionId}`, globalFields);
+        
+        const { data, error } = await supabaseClient
+          .from('questions')
+          .update(globalFields)
+          .eq('id', questionId);
+
+        if (error) {
+          // Controlla se l'errore è dovuto a colonna mancante deleted_globally
+          if (String(error.message || '').includes('deleted_globally') && globalFields.deleted_globally !== undefined) {
+            console.warn('[QUESTION_UPDATE] Colonna deleted_globally non esiste su public.questions');
+            console.warn('[QUESTION_UPDATE] Eseguire il seguente SQL:');
+            console.warn(`
+            ALTER TABLE public.questions
+            ADD COLUMN IF NOT EXISTS deleted_globally boolean DEFAULT false;
+            
+            CREATE INDEX IF NOT EXISTS idx_questions_deleted_globally 
+            ON public.questions(deleted_globally);
+            `);
+          }
+          throw error;
+        }
+
+        logQuestionUpdate(questionId, globalFields, true);
+        console.info(`[QUESTION_UPDATE] UPDATE completato con successo per domanda ${questionId}`);
+        
+        // Aggiorna cache locale
+        const db = getDB();
+        const idx = db.findIndex(q => q.id === questionId);
+        if (idx !== -1) {
+          db[idx] = { ...db[idx], ...globalFields };
+          saveDB(db);
+          console.info('[QUESTION_UPDATE] Cache locale aggiornata');
+        }
+
+        return { success: true, data };
+      } catch (error) {
+        const logEntry = logQuestionUpdate(questionId, globalFields, false, error);
+        console.error('[QUESTION_UPDATE] Errore durante UPDATE su Supabase:', error);
+        return { success: false, error: error.message || String(error), logEntry };
+      }
+    }
+
+    /**
+     * Soft delete globale: marca domanda come eliminata globalmente (deleted_globally = true).
+     * La domanda NON viene cancellata fisicamente dal database.
+     * Sparisce da quiz, simulazioni, categorie, pool, ma resta recuperabile da admin.
+     * @param {string} questionId - ID della domanda da eliminare globalmente
+     * @returns {Promise<{success: boolean, error?: string}>}
+     */
+    async function globallyDeleteQuestion(questionId) {
+      if (!supabaseClient) {
+        console.error('[GLOBAL_DELETE] Supabase non disponibile');
+        return { success: false, error: 'Supabase non disponibile' };
+      }
+
+      try {
+        console.info(`[GLOBAL_DELETE] Avviando soft delete globale per domanda ${questionId}`);
+        
+        const { data, error } = await supabaseClient
+          .from('questions')
+          .update({ deleted_globally: true, updated_at: new Date().toISOString() })
+          .eq('id', questionId);
+
+        if (error) {
+          if (String(error.message || '').includes('deleted_globally')) {
+            console.warn('[GLOBAL_DELETE] Colonna deleted_globally non esiste su public.questions');
+            console.warn('[GLOBAL_DELETE] Eseguire il seguente SQL:');
+            console.warn(`
+            ALTER TABLE public.questions
+            ADD COLUMN IF NOT EXISTS deleted_globally boolean DEFAULT false;
+            
+            CREATE INDEX IF NOT EXISTS idx_questions_deleted_globally 
+            ON public.questions(deleted_globally);
+            `);
+          }
+          throw error;
+        }
+
+        logGlobalDelete(questionId, true);
+        console.info(`[GLOBAL_DELETE] Soft delete completato per domanda ${questionId}`);
+
+        // Aggiorna cache locale
+        const db = getDB();
+        const idx = db.findIndex(q => q.id === questionId);
+        if (idx !== -1) {
+          db[idx] = { ...db[idx], deleted_globally: true };
+          saveDB(db);
+          console.info('[GLOBAL_DELETE] Cache locale aggiornata');
+        }
+
+        return { success: true, data };
+      } catch (error) {
+        logGlobalDelete(questionId, false, error);
+        console.error('[GLOBAL_DELETE] Errore durante soft delete:', error);
+        return { success: false, error: error.message || String(error) };
+      }
+    }
+
+    /**
+     * Helper per mostrare SQL necessario per aggiungere colonna deleted_globally
+     */
+    function showDeletedGloballySqlHelper() {
+      const sql = `
+-- Per aggiungere supporto a soft delete globale:
+ALTER TABLE public.questions
+ADD COLUMN IF NOT EXISTS deleted_globally boolean DEFAULT false;
+
+-- Indice per performance sui filtri
+CREATE INDEX IF NOT EXISTS idx_questions_deleted_globally 
+ON public.questions(deleted_globally);
+
+-- Se hai dati legacy, eseguire:
+UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS NULL;
+      `;
+      console.info('[SCHEMA_HELPER] SQL per aggiungere deleted_globally:\n' + sql);
+      return sql;
+    }
+
     function getHistory() {
       return getLocalJSON(userKey(HISTORY_KEY), []);
     }
@@ -2409,7 +2593,7 @@
      * Ordinate per mistakeCount decrescente.
      */
     function getWrongQuestions() {
-      const db = getDB().filter(q => !isQuestionDeleted(q));
+      const db = getDB().filter(q => !isQuestionDeleted(q) && !q.deleted_globally);
       const stats = getStats();
 
       return db
@@ -2430,7 +2614,7 @@
      * Ritorna: { totalSeen, totalCorrect, totalWrong, percentageCorrect, avgMistakeCount }
      */
     function calculateCategoryStats(category) {
-      const db = getDB().filter(q => q.macrocategoria === category && !isQuestionDeleted(q));
+      const db = getDB().filter(q => q.macrocategoria === category && !isQuestionDeleted(q) && !q.deleted_globally);
       const stats = getStats();
 
       let totalSeen = 0, totalCorrect = 0, totalWrong = 0, totalMistakeCount = 0;
@@ -2593,7 +2777,7 @@
      * Ottiene le domande preferite.
      */
     function getFavoriteQuestions() {
-      return getDB().filter(q => q.favorite && !isQuestionDeleted(q));
+      return getDB().filter(q => q.favorite && !isQuestionDeleted(q) && !q.deleted_globally);
     }
 
     // ============================================================
@@ -2958,7 +3142,7 @@
     }
 
     function updateOfficialPreview() {
-      const db = getDB().filter(q => !isQuestionDeleted(q));
+      const db = getDB().filter(q => !isQuestionDeleted(q) && !q.deleted_globally);
       const el = document.getElementById('official-composition-preview');
       if (!db.length) { el.innerHTML = 'Carica domande per vedere la composizione disponibile.'; return; }
 
@@ -3024,8 +3208,9 @@
     function updateHomeStats() {
       const db = getDB();
       const hist = getHistory();
-      document.getElementById('stat-total').textContent = db.length;
-      const flagged = db.filter(q => q.flaggedForDeletion && !isQuestionDeleted(q)).length;
+      const activeQuestions = db.filter(q => !q.deleted_globally).length;
+      document.getElementById('stat-total').textContent = activeQuestions;
+      const flagged = db.filter(q => q.flaggedForDeletion && !isQuestionDeleted(q) && !q.deleted_globally).length;
       document.getElementById('stat-flagged').textContent = flagged;
       document.getElementById('stat-tests').textContent = hist.length;
       const officialHist = hist.filter(h => !h.mode || h.mode === 'official');
@@ -3040,7 +3225,7 @@
     }
 
     function getCategories() {
-      const db = getDB().filter(q => !isQuestionDeleted(q));
+      const db = getDB().filter(q => !isQuestionDeleted(q) && !q.deleted_globally);
       return [...new Set(db.map(q => q.macrocategoria))].filter(Boolean);
     }
 
@@ -3229,7 +3414,8 @@
         const matchesSearch = !search || q.domanda.toLowerCase().includes(search);
         const matchesFlag = flaggedOnlyView ? q.flaggedForDeletion : true;
         const matchesDeleted = flaggedOnlyView ? !isQuestionDeleted(q) : true;
-        return matchesSearch && matchesFlag && matchesDeleted;
+        const notGloballyDeleted = !q.deleted_globally;
+        return matchesSearch && matchesFlag && matchesDeleted && notGloballyDeleted;
       });
 
       if (!filtered.length) {
@@ -3355,8 +3541,9 @@
         const matchesFlag = flaggedOnlyView ? q.flaggedForDeletion : true;
         const matchesDeleted = flaggedOnlyView ? !isQuestionDeleted(q) : true;
         const matchesFavorite = favoriteOnlyView ? q.favorite : true;
+        const notGloballyDeleted = !q.deleted_globally;
 
-        return matchesCategory && matchesSearch && matchesFlag && matchesDeleted && matchesFavorite;
+        return matchesCategory && matchesSearch && matchesFlag && matchesDeleted && matchesFavorite && notGloballyDeleted;
       });
 
       const container = document.getElementById('db-table-container');
@@ -3592,7 +3779,7 @@
     let timerInterval = null;
 
     function startQuiz() {
-      const db = getDB().filter(q => !isQuestionDeleted(q));
+      const db = getDB().filter(q => !isQuestionDeleted(q) && !q.deleted_globally);
       if (!db.length) { showToast('❌ Nessuna domanda in banca dati'); return; }
 
       let questions = [];
@@ -4281,17 +4468,37 @@
         return;
       }
 
-      q.domanda = newQuestionText;
+      // Raccoglie tutti gli aggiornamenti per il log
+      const globalUpdates = {};
+      
+      if (q.domanda !== newQuestionText) {
+        globalUpdates.domanda = newQuestionText;
+        q.domanda = newQuestionText;
+      }
+
+      // Aggiorna risposte
+      let risposteChanged = false;
       editableOpts.forEach(l => {
         const value = document.getElementById('edit-risposta-' + l)?.value.trim();
-        if (value) q['risposta_' + l] = value;
+        if (value && q['risposta_' + l] !== value) {
+          globalUpdates['risposta_' + l] = value;
+          q['risposta_' + l] = value;
+          risposteChanged = true;
+        }
       });
 
       // update category
       const newCat = document.getElementById('edit-cat').value;
+      if (q.macrocategoria !== newCat) {
+        globalUpdates.macrocategoria = newCat;
+      }
       q.macrocategoria = newCat;
       q.isSituazionale = newCat.toLowerCase() === 'situazionali';
       q.is_situazionale = q.isSituazionale;
+      if (q.isSituazionale !== undefined) {
+        globalUpdates.isSituazionale = q.isSituazionale;
+        globalUpdates.is_situazionale = q.is_situazionale;
+      }
 
       if (!isSit) {
         const sel = document.querySelector('input[name="edit-correct"]:checked');
@@ -4299,19 +4506,46 @@
           showToast('⚠ La risposta corretta selezionata non può essere vuota');
           return;
         }
-        if (sel) q.corretta = sel.value;
+        if (sel && q.corretta !== sel.value) {
+          globalUpdates.corretta = sel.value;
+          q.corretta = sel.value;
+        }
       } else {
         const opts = ['a', 'b', 'c', 'd'].filter(l => q['risposta_' + l]);
         opts.forEach(l => {
           const val = document.getElementById('sit-level-' + l)?.value;
-          if (val === 'alta') q.efficace_alta = l.toUpperCase();
-          else if (val === 'neutra') q.efficace_neutra = l.toUpperCase();
-          else if (val === 'bassa') q.efficace_bassa = l.toUpperCase();
+          if (val === 'alta' && q.efficace_alta !== l.toUpperCase()) {
+            globalUpdates.efficace_alta = l.toUpperCase();
+            q.efficace_alta = l.toUpperCase();
+          }
+          else if (val === 'neutra' && q.efficace_neutra !== l.toUpperCase()) {
+            globalUpdates.efficace_neutra = l.toUpperCase();
+            q.efficace_neutra = l.toUpperCase();
+          }
+          else if (val === 'bassa' && q.efficace_bassa !== l.toUpperCase()) {
+            globalUpdates.efficace_bassa = l.toUpperCase();
+            q.efficace_bassa = l.toUpperCase();
+          }
         });
       }
 
       db[idx] = q;
       saveDB(db);
+
+      // Persisti cambiamenti globali su Supabase
+      if (Object.keys(globalUpdates).length > 0) {
+        console.info('[QUESTION_EDIT] Persisting global changes for question', editingQuestionId, globalUpdates);
+        persistQuestionGlobal(editingQuestionId, globalUpdates).then(result => {
+          if (!result.success) {
+            console.warn('[QUESTION_EDIT] Salvataggio Supabase non riuscito:', result.error);
+            showToast('⚠️ Modifiche salvate localmente, ma sincronizzazione Supabase non riuscita');
+          } else {
+            console.info('[QUESTION_EDIT] Modifiche persistite su Supabase con successo');
+          }
+        }).catch(err => {
+          console.error('[QUESTION_EDIT] Errore durante persistenza:', err);
+        });
+      }
 
       // Also update live quiz if editing from quiz screen
       if (quiz) {
