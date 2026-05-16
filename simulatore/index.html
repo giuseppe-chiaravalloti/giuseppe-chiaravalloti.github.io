@@ -3331,7 +3331,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
       reader.readAsText(file, 'UTF-8');
     }
 
-    function processCSV(text) {
+    async function processCSV(text) {
       const lines = text.replace(/\r/g, '').split('\n').filter(l => l.trim());
       if (lines.length < 2) { showToast('❌ File CSV vuoto o non valido'); return; }
 
@@ -3358,6 +3358,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
 
       const db = getDB();
       const existingKeys = new Set(db.map(q => q.domanda.toLowerCase().trim()));
+      const importedQuestions = [];
       let added = 0, dupes = 0;
 
       for (let i = 1; i < lines.length; i++) {
@@ -3385,6 +3386,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
           macrocategoria: macro,
           isSituazionale: isSit
         };
+        importedQuestions.push(q);
 
         if (isSit) {
           q.efficace_alta = get('efficace_alta') || get('corretta') || 'A';
@@ -3397,6 +3399,61 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
         db.push(q);
         existingKeys.add(domanda.toLowerCase().trim());
         added++;
+      }
+
+      console.log('[IMPORT] Domande parse:', importedQuestions.length);
+
+      if (importedQuestions.length && !supabaseClient) {
+        console.error('[IMPORT] Supabase non disponibile: import CSV interrotto');
+        showToast('❌ Errore salvataggio Supabase');
+        return;
+      }
+
+      for (let i = 0; i < importedQuestions.length; i += 100) {
+        const chunk = importedQuestions.slice(i, i + 100);
+        console.log('[IMPORT] Invio chunk:', {
+          from: i,
+          to: i + chunk.length - 1,
+          size: chunk.length
+        });
+
+        let error = null;
+        try {
+          ({ error } = await supabaseClient
+            .from('questions')
+            .insert(chunk.map(q => ({
+              id: q.id,
+              domanda: q.domanda,
+              risposta_a: q.risposta_a,
+              risposta_b: q.risposta_b,
+              risposta_c: q.risposta_c,
+              risposta_d: q.risposta_d,
+              corretta: q.corretta,
+              macrocategoria: q.macrocategoria,
+              is_situazionale: q.isSituazionale,
+              efficace_alta: q.efficace_alta,
+              efficace_neutra: q.efficace_neutra,
+              efficace_bassa: q.efficace_bassa
+            }))));
+        } catch (e) {
+          error = e;
+        }
+
+        console.log('[IMPORT] Risultato insert:', {
+          inserted: chunk.length,
+          error
+        });
+
+        if (error) {
+          console.error('[IMPORT] Errore insert Supabase:', {
+            from: i,
+            to: i + chunk.length - 1,
+            size: chunk.length,
+            error
+          });
+          showToast('❌ Errore salvataggio Supabase');
+          return;
+        }
       }
 
       saveDB(db);
