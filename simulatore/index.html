@@ -2593,6 +2593,8 @@
     let flaggedOnlyView = false;
     let favoriteOnlyView = false;
     let authListenerReady = false;
+    let appInitialized = false;
+    let appInitPromise = null;
 
     // ============================================================
     // AUTH
@@ -2618,10 +2620,12 @@
         if (event === 'SIGNED_IN' && session?.user && !currentUser) {
           currentUser = session.user;
           window.history.replaceState({}, document.title, window.location.pathname);
-          window.location.reload();
+          initializeAuthenticatedApp();
         }
         if (event === 'SIGNED_OUT') {
           currentUser = null;
+          appInitialized = false;
+          appInitPromise = null;
           showLoginScreen('Accesso terminato. Inserisci la tua email per rientrare.');
         }
       });
@@ -2659,7 +2663,80 @@
     async function logout() {
       if (supabaseClient) await supabaseClient.auth.signOut();
       currentUser = null;
+      appInitialized = false;
+      appInitPromise = null;
       showLoginScreen('Sei uscito dal tuo account.');
+    }
+
+    async function initializeAuthenticatedApp() {
+      if (appInitialized) return;
+      if (appInitPromise) return appInitPromise;
+
+      appInitPromise = (async () => {
+        showAuthenticatedApp();
+
+        // Carica le domande da Supabase (o localStorage come fallback)
+        await syncDBFromSupabase();
+        await syncHistoryFromSupabase();
+
+        const settings = loadSettings();
+        if (settings) {
+          document.getElementById('cfg-num').value = settings.numQuestions;
+          document.getElementById('cfg-time').value = settings.timeMinutes;
+          document.getElementById('cfg-review').value = settings.reviewMode;
+          document.getElementById('cfg-time-official').value = settings.timeMinutesOfficial;
+          document.getElementById('cfg-review-official').value = settings.reviewModeOfficial;
+          document.getElementById('cfg-time-review').value = settings.timeMinutesReview || 60;
+          document.getElementById('cfg-review-review').value = settings.reviewModeReview || 'immediate';
+          if (['official', 'custom', 'review'].includes(settings.mode)) {
+            setMode(settings.mode);
+          }
+        }
+
+        updateHomeStats();
+        renderCatChips();
+        renderDBTable();
+        renderHistory();
+        updateOfficialPreview();
+        updateReviewQuestionsCount();
+
+        // Check for active session at startup
+        if (hasActiveSession()) {
+          const savedQuiz = loadQuizSession();
+          if (savedQuiz) {
+            // Update resume modal with session info
+            document.getElementById('resume-total').textContent = savedQuiz.total;
+            const progressPct = Math.round((savedQuiz.current / savedQuiz.total) * 100);
+            document.getElementById('resume-progress').textContent = progressPct;
+            const m = Math.floor(savedQuiz.timeLeft / 60);
+            const s = savedQuiz.timeLeft % 60;
+            document.getElementById('resume-time').textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+
+            // Show resume modal
+            document.getElementById('resume-modal').classList.add('open');
+          }
+        }
+
+        const uz = document.getElementById('upload-zone');
+        if (!uz.dataset.listenersReady) {
+          uz.dataset.listenersReady = '1';
+          uz.addEventListener('dragover', e => { e.preventDefault(); uz.classList.add('drag'); });
+          uz.addEventListener('dragleave', () => uz.classList.remove('drag'));
+          uz.addEventListener('drop', e => {
+            e.preventDefault(); uz.classList.remove('drag');
+            const f = e.dataTransfer.files[0];
+            if (f) parseCSVFile(f);
+          });
+        }
+
+        appInitialized = true;
+      })().catch(error => {
+        appInitPromise = null;
+        console.warn('Errore inizializzazione app', error);
+        throw error;
+      });
+
+      return appInitPromise;
     }
 
     // ============================================================
@@ -2684,58 +2761,7 @@
       }
 
       window.history.replaceState({}, document.title, window.location.pathname);
-      showAuthenticatedApp();
-
-      // Carica le domande da Supabase (o localStorage come fallback)
-      await syncDBFromSupabase();
-      await syncHistoryFromSupabase();
-
-      const settings = loadSettings();
-      if (settings) {
-        document.getElementById('cfg-num').value = settings.numQuestions;
-        document.getElementById('cfg-time').value = settings.timeMinutes;
-        document.getElementById('cfg-review').value = settings.reviewMode;
-        document.getElementById('cfg-time-official').value = settings.timeMinutesOfficial;
-        document.getElementById('cfg-review-official').value = settings.reviewModeOfficial;
-        document.getElementById('cfg-time-review').value = settings.timeMinutesReview || 60;
-        document.getElementById('cfg-review-review').value = settings.reviewModeReview || 'immediate';
-        if (['official', 'custom', 'review'].includes(settings.mode)) {
-          setMode(settings.mode);
-        }
-      }
-
-      updateHomeStats();
-      renderCatChips();
-      renderDBTable();
-      renderHistory();
-      updateOfficialPreview();
-      updateReviewQuestionsCount();
-
-      // Check for active session at startup
-      if (hasActiveSession()) {
-        const savedQuiz = loadQuizSession();
-        if (savedQuiz) {
-          // Update resume modal with session info
-          document.getElementById('resume-total').textContent = savedQuiz.total;
-          const progressPct = Math.round((savedQuiz.current / savedQuiz.total) * 100);
-          document.getElementById('resume-progress').textContent = progressPct;
-          const m = Math.floor(savedQuiz.timeLeft / 60);
-          const s = savedQuiz.timeLeft % 60;
-          document.getElementById('resume-time').textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-
-          // Show resume modal
-          document.getElementById('resume-modal').classList.add('open');
-        }
-      }
-
-      const uz = document.getElementById('upload-zone');
-      uz.addEventListener('dragover', e => { e.preventDefault(); uz.classList.add('drag'); });
-      uz.addEventListener('dragleave', () => uz.classList.remove('drag'));
-      uz.addEventListener('drop', e => {
-        e.preventDefault(); uz.classList.remove('drag');
-        const f = e.dataTransfer.files[0];
-        if (f) parseCSVFile(f);
-      });
+      await initializeAuthenticatedApp();
     });
 
     // ============================================================
