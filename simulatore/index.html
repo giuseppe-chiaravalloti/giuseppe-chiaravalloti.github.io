@@ -2258,8 +2258,57 @@
     }
 
     /**
+     * Whitelist ristretta di campi consentiti per UPDATE su public.questions.
+     * Solo campi che esistono realmente nella tabella Supabase.
+     */
+    function getQuestionFieldsWhitelist() {
+      return {
+        // Testo domanda
+        'domanda': true,
+        // Risposte
+        'risposta_a': true,
+        'risposta_b': true,
+        'risposta_c': true,
+        'risposta_d': true,
+        // Risposta corretta
+        'corretta': true,
+        // Categoria
+        'macrocategoria': true,
+        // Efficacia situazionali (solo lettura livelli)
+        'efficace_alta': true,
+        'efficace_neutra': true,
+        'efficace_bassa': true,
+        // Soft delete globale
+        'deleted_globally': true
+      };
+    }
+
+    /**
+     * Filtra campi frontend/personali prima di UPDATE su Supabase.
+     * Applica rigorosamente una whitelist di campi DB reali.
+     * @param {object} updates - Campi candidati per UPDATE
+     * @returns {object} {allowed, discarded} - Campi filtrati e campi scartati
+     */
+    function filterQuestionFieldsForDB(updates) {
+      const whitelist = getQuestionFieldsWhitelist();
+      const allowed = {};
+      const discarded = [];
+
+      Object.entries(updates).forEach(([key, value]) => {
+        if (whitelist[key]) {
+          allowed[key] = value;
+        } else {
+          discarded.push(key);
+        }
+      });
+
+      return { allowed, discarded };
+    }
+
+    /**
      * Persiste modifiche di domanda su Supabase (public.questions).
      * NON usa DELETE fisico, opera sempre via UPDATE.
+     * Applica WHITELIST RISTRETTA di campi consentiti.
      * @param {string} questionId - ID della domanda da modificare
      * @param {object} updates - Oggetto con i campi da aggiornare
      * @returns {Promise<{success: boolean, error?: string}>}
@@ -2270,23 +2319,30 @@
         return { success: false, error: 'Supabase non disponibile' };
       }
 
-      // Filtra campi di stato personale che non devono andare su questions
-      const globalFields = {};
-      const personalFields = ['favorite', 'flaggedForDeletion', 'deleted', 'shown', 'correct', 'wrong', 'skipped', 'mistakeCount', 'lastSeen'];
-      
-      Object.entries(updates).forEach(([key, value]) => {
-        if (!personalFields.includes(key)) {
-          globalFields[key] = value;
-        }
-      });
+      // Filtra rigorosamente campi frontend/locali
+      const { allowed: globalFields, discarded } = filterQuestionFieldsForDB(updates);
+
+      // Log dettagliato filtri
+      if (discarded.length > 0) {
+        console.info('[QUESTION_UPDATE_FILTERED]', {
+          questionId,
+          totalSubmitted: Object.keys(updates).length,
+          allowedForDB: Object.keys(globalFields).length,
+          discardedFields: discarded,
+          message: `Scartati ${discarded.length} campi frontend: ${discarded.join(', ')}`
+        });
+      }
 
       if (Object.keys(globalFields).length === 0) {
-        console.info('[QUESTION_UPDATE] Nessun campo globale da aggiornare per domanda', questionId);
-        return { success: true, message: 'Nessun campo globale da modificare' };
+        console.info('[QUESTION_UPDATE] Nessun campo globale valido da aggiornare per domanda', questionId);
+        return { success: true, message: 'Nessun campo DB da modificare' };
       }
 
       try {
-        console.info(`[QUESTION_UPDATE] Iniziando UPDATE su questions per ID ${questionId}`, globalFields);
+        console.info(`[QUESTION_UPDATE] Iniziando UPDATE su questions per ID ${questionId}`, {
+          campiInviati: Object.keys(globalFields),
+          dettagli: globalFields
+        });
         
         const { data, error } = await supabaseClient
           .from('questions')
@@ -2294,7 +2350,7 @@
           .eq('id', questionId);
 
         if (error) {
-          // Controlla se l'errore è dovuto a colonna mancante deleted_globally
+          // Controlla se l'errore è dovuto a colonna mancante
           if (String(error.message || '').includes('deleted_globally') && globalFields.deleted_globally !== undefined) {
             console.warn('[QUESTION_UPDATE] Colonna deleted_globally non esiste su public.questions');
             console.warn('[QUESTION_UPDATE] Eseguire il seguente SQL:');
@@ -2305,6 +2361,11 @@
             CREATE INDEX IF NOT EXISTS idx_questions_deleted_globally 
             ON public.questions(deleted_globally);
             `);
+          } else if (error.message && error.message.includes('could not find') && error.message.includes('column')) {
+            // Errore generico di colonna non trovata
+            console.error('[QUESTION_UPDATE] Una delle colonne non esiste su public.questions');
+            console.error('[QUESTION_UPDATE] Colonne inviate:', Object.keys(globalFields));
+            console.error('[QUESTION_UPDATE] Errore:', error.message);
           }
           throw error;
         }
@@ -2312,16 +2373,16 @@
         logQuestionUpdate(questionId, globalFields, true);
         console.info(`[QUESTION_UPDATE] UPDATE completato con successo per domanda ${questionId}`);
         
-        // Aggiorna cache locale
+        // Aggiorna cache locale con SOLO i campi che sono stati persistiti su Supabase
         const db = getDB();
         const idx = db.findIndex(q => q.id === questionId);
         if (idx !== -1) {
           db[idx] = { ...db[idx], ...globalFields };
           saveDB(db);
-          console.info('[QUESTION_UPDATE] Cache locale aggiornata');
+          console.info('[QUESTION_UPDATE] Cache locale aggiornata con campi persistiti');
         }
 
-        return { success: true, data };
+        return { success: true, data, fieldsApplied: Object.keys(globalFields) };
       } catch (error) {
         const logEntry = logQuestionUpdate(questionId, globalFields, false, error);
         console.error('[QUESTION_UPDATE] Errore durante UPDATE su Supabase:', error);
