@@ -223,6 +223,16 @@
       gap: 0.75rem;
     }
 
+    .auth-switch {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .auth-switch button {
+      flex: 1;
+    }
+
     .auth-note {
       color: var(--text-dim);
       font-size: 0.78rem;
@@ -1638,11 +1648,17 @@
     <div class="screen" id="screen-login">
       <div class="auth-card">
         <div class="auth-title">Accedi al simulatore</div>
-        <div class="auth-sub">Ricevi un link via email e sincronizza storico, preferiti, domande eliminate e statistiche su tutti i dispositivi.</div>
-        <form class="auth-form" onsubmit="loginWithMagicLink(event)">
+        <div class="auth-sub">Entra con email e password per sincronizzare storico, preferiti, domande eliminate e statistiche su tutti i dispositivi.</div>
+        <div class="auth-switch">
+          <button class="btn btn-primary btn-sm" type="button" id="auth-login-tab" onclick="setAuthMode('login')">Accedi</button>
+          <button class="btn btn-secondary btn-sm" type="button" id="auth-signup-tab" onclick="setAuthMode('signup')">Registrati</button>
+        </div>
+        <form class="auth-form" onsubmit="submitEmailPasswordAuth(event)">
           <input type="email" id="auth-email" placeholder="La tua email" autocomplete="email" required>
-          <button class="btn btn-primary" type="submit" id="auth-submit">Invia magic link</button>
-          <div class="auth-note" id="auth-message">Apri il link dallo stesso browser oppure dal dispositivo su cui vuoi studiare.</div>
+          <input type="password" id="auth-password" placeholder="Password" autocomplete="current-password" minlength="6" required>
+          <button class="btn btn-primary" type="submit" id="auth-submit">Accedi</button>
+          <button class="btn btn-secondary btn-sm" type="button" onclick="resetPassword()" id="auth-reset-btn">Password dimenticata?</button>
+          <div class="auth-note" id="auth-message">Usa la password del tuo account. Se arrivi dal vecchio accesso via email, imposta una password con il reset.</div>
         </form>
       </div>
     </div>
@@ -1948,7 +1964,6 @@
     // ============================================================
     const SUPABASE_URL = 'https://ygpqcmjifzydycmaxlws.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_44MfFy8MkCSPfyOxKegufA_j9rWdFgw';
-    const AUTH_REDIRECT_URL = 'https://giuseppechiaravalloti.art/simulatore/';
 
     let supabaseClient = null;
     try {
@@ -2618,6 +2633,7 @@
     let authListenerReady = false;
     let appInitialized = false;
     let appInitPromise = null;
+    let authMode = 'login';
 
     // ============================================================
     // AUTH
@@ -2636,10 +2652,37 @@
       showScreen('screen-home');
     }
 
+    function setAuthMode(mode) {
+      authMode = ['signup', 'reset'].includes(mode) ? mode : 'login';
+      const isSignup = authMode === 'signup';
+      const isReset = authMode === 'reset';
+      document.getElementById('auth-login-tab').className = 'btn btn-sm ' + (!isSignup ? 'btn-primary' : 'btn-secondary');
+      document.getElementById('auth-signup-tab').className = 'btn btn-sm ' + (isSignup ? 'btn-primary' : 'btn-secondary');
+      document.getElementById('auth-submit').textContent = isReset ? 'Salva nuova password' : isSignup ? 'Crea account' : 'Accedi';
+      document.getElementById('auth-password').autocomplete = isSignup || isReset ? 'new-password' : 'current-password';
+      document.getElementById('auth-password').placeholder = isReset ? 'Nuova password' : 'Password';
+      document.getElementById('auth-reset-btn').style.display = isSignup || isReset ? 'none' : 'block';
+      if (isReset && currentUser?.email) document.getElementById('auth-email').value = currentUser.email;
+      document.getElementById('auth-message').textContent = isSignup
+        ? 'Crea un account con password di almeno 6 caratteri.'
+        : isReset
+          ? 'Inserisci una nuova password di almeno 6 caratteri.'
+        : 'Usa la password del tuo account. Se arrivi dal vecchio accesso via email, imposta una password con il reset.';
+    }
+
     function setupAuthListener() {
       if (!supabaseClient || authListenerReady) return;
       authListenerReady = true;
       supabaseClient.auth.onAuthStateChange((event, session) => {
+        if (event === 'PASSWORD_RECOVERY' && session?.user) {
+          currentUser = session.user;
+          appInitialized = false;
+          appInitPromise = null;
+          window.history.replaceState({}, document.title, window.location.pathname);
+          showLoginScreen();
+          setAuthMode('reset');
+          return;
+        }
         if (event === 'SIGNED_IN' && session?.user) {
           const isDifferentUser = currentUser?.id && currentUser.id !== session.user.id;
           if (isDifferentUser) {
@@ -2659,7 +2702,18 @@
       });
     }
 
-    async function loginWithMagicLink(event) {
+    function authErrorMessage(error, mode) {
+      const msg = (error?.message || '').toLowerCase();
+      if (msg.includes('invalid login credentials')) return 'Email o password non corretti.';
+      if (msg.includes('email not confirmed')) return 'Conferma la tua email prima di accedere.';
+      if (msg.includes('user already registered') || msg.includes('already registered')) return 'Account già registrato. Prova ad accedere o usa il reset password.';
+      if (msg.includes('password')) return 'La password deve avere almeno 6 caratteri.';
+      return mode === 'signup'
+        ? 'Registrazione non riuscita. Controlla i dati e riprova.'
+        : 'Accesso non riuscito. Controlla email e password.';
+    }
+
+    async function submitEmailPasswordAuth(event) {
       event.preventDefault();
       if (!supabaseClient) {
         showLoginScreen('Supabase non è disponibile in questo momento.');
@@ -2667,24 +2721,61 @@
       }
 
       const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
       const btn = document.getElementById('auth-submit');
       const msg = document.getElementById('auth-message');
       btn.disabled = true;
-      btn.textContent = 'Invio...';
+      btn.textContent = authMode === 'reset' ? 'Salvataggio...' : authMode === 'signup' ? 'Creo account...' : 'Accesso...';
 
-      const { error } = await supabaseClient.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: AUTH_REDIRECT_URL }
-      });
+      const { data, error } = authMode === 'reset'
+        ? await supabaseClient.auth.updateUser({ password })
+        : authMode === 'signup'
+          ? await supabaseClient.auth.signUp({ email, password })
+          : await supabaseClient.auth.signInWithPassword({ email, password });
 
       btn.disabled = false;
-      btn.textContent = 'Invia magic link';
+      btn.textContent = authMode === 'reset' ? 'Salva nuova password' : authMode === 'signup' ? 'Crea account' : 'Accedi';
       if (error) {
-        msg.textContent = 'Invio non riuscito. Controlla la mail e riprova.';
-        console.warn('Errore magic link Supabase', error);
+        msg.textContent = authErrorMessage(error, authMode);
+        console.warn('Errore autenticazione Supabase', error);
         return;
       }
-      msg.textContent = 'Link inviato. Controlla la tua email per accedere.';
+
+      if (authMode === 'reset') {
+        msg.textContent = 'Password aggiornata. Accesso in corso...';
+        await initializeAuthenticatedApp();
+        return;
+      }
+
+      if (authMode === 'signup' && !data.session) {
+        msg.textContent = 'Account creato. Controlla la tua email per confermare la registrazione, poi accedi.';
+        setAuthMode('login');
+        return;
+      }
+
+      msg.textContent = authMode === 'signup' ? 'Account creato. Accesso in corso...' : 'Accesso effettuato.';
+    }
+
+    async function resetPassword() {
+      if (!supabaseClient) {
+        showLoginScreen('Supabase non è disponibile in questo momento.');
+        return;
+      }
+
+      const email = document.getElementById('auth-email').value.trim();
+      const msg = document.getElementById('auth-message');
+      if (!email) {
+        msg.textContent = 'Inserisci la tua email per ricevere il reset password.';
+        return;
+      }
+
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
+      if (error) {
+        msg.textContent = 'Reset password non riuscito. Controlla la mail e riprova.';
+        console.warn('Errore reset password Supabase', error);
+        return;
+      }
+      msg.textContent = 'Email di reset inviata. Segui il link per impostare una nuova password.';
     }
 
     async function logout() {
