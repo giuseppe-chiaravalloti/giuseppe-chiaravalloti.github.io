@@ -1948,10 +1948,18 @@
     // ============================================================
     const SUPABASE_URL = 'https://ygpqcmjifzydycmaxlws.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_44MfFy8MkCSPfyOxKegufA_j9rWdFgw';
+    const AUTH_REDIRECT_URL = 'https://giuseppechiaravalloti.art/simulatore/';
 
     let supabaseClient = null;
     try {
-      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+          flowType: 'implicit'
+        }
+      });
     } catch (e) {
       console.warn('Supabase non disponibile, usando localStorage', e);
     }
@@ -2632,7 +2640,12 @@
       if (!supabaseClient || authListenerReady) return;
       authListenerReady = true;
       supabaseClient.auth.onAuthStateChange((event, session) => {
-        if (event === 'SIGNED_IN' && session?.user && !currentUser) {
+        if (event === 'SIGNED_IN' && session?.user) {
+          const isDifferentUser = currentUser?.id && currentUser.id !== session.user.id;
+          if (isDifferentUser) {
+            appInitialized = false;
+            appInitPromise = null;
+          }
           currentUser = session.user;
           window.history.replaceState({}, document.title, window.location.pathname);
           initializeAuthenticatedApp();
@@ -2659,10 +2672,9 @@
       btn.disabled = true;
       btn.textContent = 'Invio...';
 
-      const redirectTo = window.location.href.split('#')[0].split('?')[0];
       const { error } = await supabaseClient.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: redirectTo }
+        options: { emailRedirectTo: AUTH_REDIRECT_URL }
       });
 
       btn.disabled = false;
