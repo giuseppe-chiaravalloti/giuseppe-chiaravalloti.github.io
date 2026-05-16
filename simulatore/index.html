@@ -25,18 +25,18 @@
     }
 
     :root[data-theme="light"] {
-      --bg: #ffffff;
-      --surface: #f8f9fa;
-      --surface2: #f0f1f3;
-      --border: #dfe1e6;
+      --bg: #f4f5f9;
+      --surface: #ffffff;
+      --surface2: #eef0f5;
+      --border: #dde0ea;
       --accent: #4f7cff;
       --accent2: #a78bfa;
       --gold: #d49a1f;
       --red: #dc2626;
       --green: #059669;
       --neutral: #6b7280;
-      --text: #1f2937;
-      --text-dim: #9ca3af;
+      --text: #1a1f2e;
+      --text-dim: #8892a4;
     }
 
     * {
@@ -45,12 +45,20 @@
       padding: 0;
     }
 
+    html {
+      /* smooth scroll & better tap highlight on mobile */
+      -webkit-tap-highlight-color: transparent;
+      scroll-behavior: smooth;
+    }
+
     body {
       background: var(--bg);
       color: var(--text);
       font-family: 'DM Sans', sans-serif;
       min-height: 100vh;
       overflow-x: hidden;
+      /* prevent double-tap zoom on mobile */
+      touch-action: manipulation;
     }
 
     /* BACKGROUND GRID */
@@ -71,19 +79,23 @@
       z-index: 1;
       max-width: 900px;
       margin: 0 auto;
-      padding: 2rem 1.5rem 4rem;
+      padding: 0 1rem 5rem;
+      /* bottom room for mobile nav bar */
     }
 
-    /* HEADER */
+    /* ── HEADER ── */
     header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 1.5rem 0 2.5rem;
+      padding: 1rem 0 1rem;
       border-bottom: 1px solid var(--border);
-      margin-bottom: 2.5rem;
-      flex-wrap: wrap;
-      gap: 1rem;
+      margin-bottom: 1.25rem;
+      gap: 0.75rem;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 50;
     }
 
     .logo {
@@ -91,6 +103,7 @@
       font-size: 1.4rem;
       color: var(--text);
       letter-spacing: -0.02em;
+      flex-shrink: 0;
     }
 
     .logo span {
@@ -99,35 +112,35 @@
 
     .badge {
       font-family: 'DM Mono', monospace;
-      font-size: 0.7rem;
+      font-size: 0.62rem;
       background: var(--surface2);
       border: 1px solid var(--border);
-      padding: 0.3rem 0.8rem;
+      padding: 0.25rem 0.65rem;
       border-radius: 100px;
       color: var(--neutral);
-      letter-spacing: 0.08em;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
-    }
-
-    .header-controls {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 160px;
+      /* truncate on small screens */
     }
 
     .theme-toggle {
       background: var(--surface2);
       border: 1px solid var(--border);
       color: var(--text);
-      width: 44px;
-      height: 44px;
+      width: 40px;
+      height: 40px;
       border-radius: 8px;
       cursor: pointer;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.3s ease;
+      transition: all 0.2s;
+      flex-shrink: 0;
     }
 
     .theme-toggle:hover {
@@ -135,10 +148,10 @@
       border-color: var(--accent);
     }
 
-    /* SCREENS */
+    /* ── SCREENS ── */
     .screen {
       display: none;
-      animation: fadeIn 0.3s ease;
+      animation: fadeIn 0.25s ease;
     }
 
     .screen.active {
@@ -148,7 +161,7 @@
     @keyframes fadeIn {
       from {
         opacity: 0;
-        transform: translateY(8px);
+        transform: translateY(6px);
       }
 
       to {
@@ -157,41 +170,44 @@
       }
     }
 
-    /* CARDS */
+    /* ── CARDS ── */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 16px;
-      padding: 2rem;
-      margin-bottom: 1.5rem;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
     }
 
     .card-title {
       font-family: 'DM Serif Display', serif;
-      font-size: 1.5rem;
-      margin-bottom: 0.5rem;
+      font-size: 1.35rem;
+      margin-bottom: 0.35rem;
       color: var(--text);
     }
 
     .card-sub {
       color: var(--text-dim);
-      font-size: 0.9rem;
-      margin-bottom: 1.5rem;
+      font-size: 0.87rem;
+      margin-bottom: 1.25rem;
     }
 
-    /* BUTTONS */
+    /* ── BUTTONS ── */
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
-      padding: 0.75rem 1.5rem;
+      justify-content: center;
+      gap: 0.45rem;
+      padding: 0.75rem 1.4rem;
       border-radius: 10px;
       border: none;
       font-family: 'DM Sans', sans-serif;
       font-size: 0.9rem;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.18s;
+      min-height: 44px;
+      /* accessible tap target */
     }
 
     .btn-primary {
@@ -235,6 +251,18 @@
       background: rgba(240, 180, 41, 0.22);
     }
 
+    .btn-sm {
+      padding: 0.45rem 0.9rem;
+      font-size: 0.8rem;
+      min-height: 36px;
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
     .flag-badge {
       display: inline-flex;
       align-items: center;
@@ -248,51 +276,137 @@
       border: 1px solid rgba(240, 180, 41, 0.25);
     }
 
-    .btn-sm {
-      padding: 0.4rem 0.9rem;
-      font-size: 0.8rem;
-    }
-
-    .btn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    /* STATS GRID */
+    /* ── STATS GRID ── */
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1.5rem;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
     }
 
     .stat-box {
-      background: var(--surface2);
+      background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 1rem;
+      padding: 0.9rem 0.75rem;
       text-align: center;
+      transition: border-color 0.2s;
+    }
+
+    .stat-box:hover {
+      border-color: rgba(79, 124, 255, 0.3);
     }
 
     .stat-num {
       font-family: 'DM Mono', monospace;
-      font-size: 1.8rem;
+      font-size: 1.6rem;
       font-weight: 500;
       color: var(--accent);
+      line-height: 1.1;
     }
 
     .stat-label {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: var(--text-dim);
-      margin-top: 0.25rem;
+      margin-top: 0.3rem;
+      line-height: 1.3;
     }
 
-    /* FILE UPLOAD */
+    /* ── TABS ── */
+    .tabs {
+      display: flex;
+      gap: 0.2rem;
+      background: var(--surface2);
+      padding: 0.2rem;
+      border-radius: 10px;
+      margin-bottom: 1.25rem;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 0.65rem 0.5rem;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-dim);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-height: 44px;
+      white-space: nowrap;
+    }
+
+    .tab.active {
+      background: var(--surface);
+      color: var(--text);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+      font-weight: 500;
+    }
+
+    /* ── MODE BUTTONS ── */
+    .mode-btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .mode-btn-group .btn {
+      width: 100%;
+      padding: 0.85rem 1rem;
+      font-size: 0.92rem;
+      border-radius: 10px;
+      justify-content: flex-start;
+      gap: 0.6rem;
+    }
+
+    /* ── CONFIG ROWS (stacked on mobile) ── */
+    .config-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+    }
+
+    .config-label {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    input[type=number],
+    select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.9rem;
+      padding: 0.65rem 0.9rem;
+      width: 100%;
+      outline: none;
+      transition: border 0.2s;
+      min-height: 44px;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    input[type=number]:focus,
+    select:focus {
+      border-color: var(--accent);
+    }
+
+    input[type=number] {
+      width: 110px;
+    }
+
+    /* ── FILE UPLOAD ── */
     .upload-zone {
       border: 2px dashed var(--border);
       border-radius: 12px;
-      padding: 2.5rem;
+      padding: 2rem 1rem;
       text-align: center;
       cursor: pointer;
       transition: all 0.2s;
@@ -313,20 +427,32 @@
     }
 
     .upload-icon {
-      font-size: 2.5rem;
-      margin-bottom: 0.75rem;
+      font-size: 2.2rem;
+      margin-bottom: 0.6rem;
     }
 
     .upload-text {
       color: var(--text-dim);
-      font-size: 0.9rem;
+      font-size: 0.88rem;
     }
 
     .upload-text strong {
       color: var(--accent);
     }
 
-    /* CATEGORY CHIPS */
+    /* ── MANAGE BUTTONS — GRID ── */
+    .manage-btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .manage-btn-grid .btn-danger {
+      grid-column: 1 / -1;
+    }
+
+    /* ── CATEGORY CHIPS ── */
     .cat-list {
       display: flex;
       flex-wrap: wrap;
@@ -337,15 +463,18 @@
     .cat-chip {
       font-family: 'DM Mono', monospace;
       font-size: 0.72rem;
-      padding: 0.3rem 0.8rem;
+      padding: 0.4rem 0.85rem;
       border-radius: 100px;
       border: 1px solid var(--border);
       background: var(--surface2);
       color: var(--neutral);
       letter-spacing: 0.04em;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.18s;
       user-select: none;
+      min-height: 34px;
+      display: flex;
+      align-items: center;
     }
 
     .cat-chip.selected {
@@ -360,70 +489,39 @@
       background: rgba(240, 180, 41, 0.1);
     }
 
-    /* QUIZ CONFIG */
-    .config-row {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .config-label {
-      font-size: 0.85rem;
-      color: var(--text-dim);
-      min-width: 160px;
-    }
-
-    input[type=number],
-    select {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-family: 'DM Mono', monospace;
-      font-size: 0.9rem;
-      padding: 0.5rem 0.75rem;
-      width: 100px;
-      outline: none;
-      transition: border 0.2s;
-    }
-
-    input[type=number]:focus,
-    select:focus {
-      border-color: var(--accent);
-    }
-
-    select {
-      width: auto;
-      cursor: pointer;
-    }
-
-    /* QUIZ SCREEN */
+    /* ── QUIZ SCREEN ── */
     .quiz-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
-      gap: 1rem;
+      padding: 0.75rem 0;
+      margin-bottom: 0;
+      position: sticky;
+      top: 57px;
+      /* below main header */
+      background: var(--bg);
+      z-index: 40;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 0.75rem;
     }
 
     .quiz-progress-text {
       font-family: 'DM Mono', monospace;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       color: var(--text-dim);
     }
 
     .timer {
       font-family: 'DM Mono', monospace;
-      font-size: 1.1rem;
+      font-size: 1rem;
       color: var(--accent);
       background: var(--surface2);
       border: 1px solid var(--border);
-      padding: 0.4rem 1rem;
+      padding: 0.4rem 0.9rem;
       border-radius: 8px;
       transition: color 0.3s;
+      min-width: 68px;
+      text-align: center;
     }
 
     .timer.warn {
@@ -445,51 +543,49 @@
       }
 
       50% {
-        opacity: 0.6
+        opacity: 0.55
       }
     }
 
     .progress-bar {
-      height: 4px;
+      height: 3px;
       background: var(--surface2);
-      border-radius: 2px;
-      margin-bottom: 2rem;
+      margin-bottom: 1rem;
       overflow: hidden;
     }
 
     .progress-fill {
       height: 100%;
       background: linear-gradient(90deg, var(--accent), var(--accent2));
-      border-radius: 2px;
       transition: width 0.4s ease;
     }
 
     .question-card {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 2rem;
-      margin-bottom: 1.5rem;
+      border-radius: 14px;
+      padding: 1.25rem 1rem;
+      margin-bottom: 0.9rem;
     }
 
     .question-meta {
       display: flex;
-      gap: 0.75rem;
-      margin-bottom: 1rem;
+      gap: 0.6rem;
+      margin-bottom: 0.85rem;
       align-items: center;
       flex-wrap: wrap;
     }
 
     .q-num {
       font-family: 'DM Mono', monospace;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       color: var(--text-dim);
     }
 
     .q-cat {
       font-family: 'DM Mono', monospace;
-      font-size: 0.7rem;
-      padding: 0.2rem 0.6rem;
+      font-size: 0.65rem;
+      padding: 0.2rem 0.55rem;
       border-radius: 100px;
       background: rgba(79, 124, 255, 0.1);
       color: var(--accent);
@@ -505,23 +601,25 @@
     }
 
     .question-text {
-      font-size: 1.05rem;
+      font-size: 1rem;
       line-height: 1.65;
       font-weight: 400;
     }
 
+    /* ── OPTIONS ── */
     .options-list {
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 0.75rem;
+      gap: 0.6rem;
+      margin-bottom: 1rem;
     }
 
     .option-btn {
       display: flex;
       align-items: flex-start;
-      gap: 1rem;
-      padding: 1rem 1.25rem;
+      gap: 0.85rem;
+      padding: 1rem;
       border-radius: 12px;
       border: 1px solid var(--border);
       background: var(--surface2);
@@ -531,13 +629,19 @@
       line-height: 1.5;
       cursor: pointer;
       text-align: left;
-      transition: all 0.18s;
+      transition: all 0.15s;
       width: 100%;
+      min-height: 52px;
+      /* generous touch target */
     }
 
     .option-btn:hover:not(:disabled) {
       border-color: var(--accent);
       background: rgba(79, 124, 255, 0.07);
+    }
+
+    .option-btn:active:not(:disabled) {
+      transform: scale(0.99);
     }
 
     .option-letter {
@@ -547,7 +651,7 @@
       color: var(--accent);
       background: rgba(79, 124, 255, 0.1);
       border-radius: 6px;
-      padding: 0.15rem 0.5rem;
+      padding: 0.2rem 0.5rem;
       flex-shrink: 0;
       margin-top: 0.1rem;
     }
@@ -581,46 +685,77 @@
       cursor: default;
     }
 
+    /* ── QUIZ ACTIONS — fixed bottom bar on mobile ── */
     .quiz-actions {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 60;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 0.65rem 1rem;
       display: flex;
-      gap: 1rem;
-      justify-content: space-between;
-      align-items: center;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .quiz-actions-secondary {
+      display: flex;
+      gap: 0.5rem;
       flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .quiz-actions-primary {
+      display: flex;
+      gap: 0.6rem;
+      justify-content: flex-end;
+    }
+
+    .quiz-actions-primary .btn {
+      flex: 1;
+    }
+
+    .quiz-actions-primary .btn-primary {
+      flex: 2;
     }
 
     .skip-link {
-      font-size: 0.82rem;
+      font-size: 0.78rem;
       color: var(--text-dim);
       cursor: pointer;
-      text-decoration: underline;
-      text-underline-offset: 3px;
-      background: none;
-      border: none;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 100px;
       font-family: 'DM Sans', sans-serif;
-      transition: color 0.2s;
+      padding: 0.3rem 0.75rem;
+      transition: all 0.18s;
+      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
     }
 
     .skip-link:hover {
       color: var(--text);
+      border-color: var(--text-dim);
     }
 
-    /* RESULTS */
+    /* ── RESULTS ── */
     .score-circle {
-      width: 140px;
-      height: 140px;
+      width: 130px;
+      height: 130px;
       border-radius: 50%;
       background: conic-gradient(var(--accent) 0%, var(--surface2) 0%);
       display: flex;
       align-items: center;
       justify-content: center;
-      margin: 0 auto 1.5rem;
-      position: relative;
+      margin: 0 auto 1.25rem;
     }
 
     .score-inner {
-      width: 110px;
-      height: 110px;
+      width: 102px;
+      height: 102px;
       border-radius: 50%;
       background: var(--surface);
       display: flex;
@@ -631,31 +766,31 @@
 
     .score-val {
       font-family: 'DM Mono', monospace;
-      font-size: 2rem;
+      font-size: 1.9rem;
       color: var(--text);
     }
 
     .score-max {
       font-family: 'DM Mono', monospace;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       color: var(--text-dim);
     }
 
     .result-pills {
       display: flex;
-      gap: 1rem;
+      gap: 0.6rem;
       justify-content: center;
       flex-wrap: wrap;
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
     }
 
     .pill {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 1.1rem;
+      gap: 0.4rem;
+      padding: 0.45rem 1rem;
       border-radius: 100px;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-family: 'DM Mono', monospace;
     }
 
@@ -677,17 +812,18 @@
       border: 1px solid var(--border);
     }
 
+    /* ── REVIEW ── */
     .review-list {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      gap: 0.85rem;
     }
 
     .review-item {
       background: var(--surface2);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 1.25rem;
+      padding: 1rem;
     }
 
     .review-item.wrong-item {
@@ -703,19 +839,19 @@
     }
 
     .review-q {
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       line-height: 1.55;
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.65rem;
     }
 
     .review-answers {
       display: flex;
       flex-direction: column;
-      gap: 0.4rem;
+      gap: 0.35rem;
     }
 
     .review-ans {
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       font-family: 'DM Mono', monospace;
       padding: 0.3rem 0.6rem;
       border-radius: 6px;
@@ -736,24 +872,25 @@
 
     .review-score-badge {
       font-family: 'DM Mono', monospace;
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       padding: 0.2rem 0.6rem;
       border-radius: 100px;
       float: right;
     }
 
+    /* ── DATABASE TABLE ── */
     .db-toolbar {
       display: flex;
-      gap: 0.75rem;
+      gap: 0.6rem;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 1rem;
+      margin-bottom: 0.85rem;
     }
 
     .db-toolbar-left {
       display: flex;
-      gap: 0.75rem;
+      gap: 0.6rem;
       flex-wrap: wrap;
       align-items: center;
     }
@@ -763,11 +900,14 @@
       background: var(--surface2);
       color: var(--text-dim);
       border-radius: 999px;
-      padding: 0.45rem 0.9rem;
-      font-size: 0.78rem;
+      padding: 0.4rem 0.85rem;
+      font-size: 0.75rem;
       font-family: 'DM Mono', monospace;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.18s;
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
     }
 
     .filter-chip.active {
@@ -784,52 +924,23 @@
       line-height: 1.5;
     }
 
-    /* TABS */
-    .tabs {
-      display: flex;
-      gap: 0.25rem;
-      background: var(--surface2);
-      padding: 0.25rem;
-      border-radius: 10px;
-      margin-bottom: 1.5rem;
-    }
-
-    .tab {
-      flex: 1;
-      padding: 0.6rem;
-      border-radius: 8px;
-      border: none;
-      background: transparent;
-      color: var(--text-dim);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.85rem;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .tab.active {
-      background: var(--surface);
-      color: var(--text);
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
-    }
-
-    /* TABLE */
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.85rem;
+      font-size: 0.83rem;
     }
 
     th {
       text-align: left;
-      padding: 0.75rem 1rem;
+      padding: 0.65rem 0.9rem;
       color: var(--text-dim);
       font-weight: 500;
       border-bottom: 1px solid var(--border);
+      white-space: nowrap;
     }
 
     td {
-      padding: 0.75rem 1rem;
+      padding: 0.65rem 0.9rem;
       border-bottom: 1px solid var(--border);
       color: var(--text);
     }
@@ -846,39 +957,63 @@
       display: inline-block;
       padding: 0.15rem 0.5rem;
       border-radius: 4px;
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       font-family: 'DM Mono', monospace;
     }
 
-    /* TOAST */
+    /* ── INPUT TEXT ── */
+    input[type=text] {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      padding: 0.75rem 1rem;
+      outline: none;
+      transition: border 0.2s;
+      width: 100%;
+      min-height: 44px;
+    }
+
+    input[type=text]:focus {
+      border-color: var(--accent);
+    }
+
+    /* ── TOAST ── */
     #toast {
       position: fixed;
-      bottom: 2rem;
+      bottom: 5.5rem;
+      /* above quiz-actions bar */
       left: 50%;
       transform: translateX(-50%) translateY(100px);
       background: var(--surface2);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 0.75rem 1.5rem;
-      font-size: 0.88rem;
+      padding: 0.65rem 1.25rem;
+      font-size: 0.85rem;
       color: var(--text);
       transition: transform 0.3s ease;
       z-index: 999;
       white-space: nowrap;
+      max-width: calc(100vw - 2rem);
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     #toast.show {
       transform: translateX(-50%) translateY(0);
     }
 
-    /* MODAL */
+    /* ── MODAL ── */
     .modal-overlay {
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.65);
       z-index: 100;
-      align-items: center;
+      align-items: flex-end;
+      /* sheet from bottom on mobile */
       justify-content: center;
     }
 
@@ -889,60 +1024,77 @@
     .modal {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 2rem;
-      max-width: 480px;
-      width: 90%;
-      animation: fadeIn 0.2s ease;
+      border-radius: 20px 20px 0 0;
+      padding: 1.75rem 1.5rem 2rem;
+      width: 100%;
+      max-width: 560px;
+      animation: slideUp 0.25s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(40px);
+        opacity: 0;
+      }
+
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
     }
 
     .modal h3 {
       font-family: 'DM Serif Display', serif;
-      font-size: 1.3rem;
-      margin-bottom: 0.75rem;
+      font-size: 1.25rem;
+      margin-bottom: 0.65rem;
     }
 
     .modal p {
       color: var(--text-dim);
-      font-size: 0.9rem;
-      margin-bottom: 1.5rem;
+      font-size: 0.88rem;
+      margin-bottom: 1.25rem;
       line-height: 1.6;
     }
 
     .modal-actions {
       display: flex;
-      gap: 1rem;
+      gap: 0.75rem;
       justify-content: flex-end;
     }
 
+    .modal-actions .btn {
+      flex: 1;
+    }
+
+    /* ── MISC ── */
     .empty-state {
       text-align: center;
-      padding: 3rem;
+      padding: 2.5rem 1rem;
       color: var(--text-dim);
     }
 
     .empty-state .icon {
-      font-size: 3rem;
-      margin-bottom: 1rem;
+      font-size: 2.5rem;
+      margin-bottom: 0.85rem;
     }
 
     .empty-state p {
-      font-size: 0.9rem;
+      font-size: 0.88rem;
+      line-height: 1.6;
     }
 
     .divider {
       height: 1px;
       background: var(--border);
-      margin: 1.5rem 0;
+      margin: 1.25rem 0;
     }
 
-    /* CSV TEMPLATE INFO */
     .csv-info {
       background: rgba(79, 124, 255, 0.05);
       border: 1px solid rgba(79, 124, 255, 0.15);
       border-radius: 10px;
-      padding: 1rem 1.25rem;
-      font-size: 0.82rem;
+      padding: 0.9rem 1rem;
+      font-size: 0.8rem;
       color: var(--text-dim);
       margin-top: 1rem;
       line-height: 1.7;
@@ -954,32 +1106,108 @@
       padding: 0.1rem 0.4rem;
       border-radius: 4px;
       font-family: 'DM Mono', monospace;
-      font-size: 0.78rem;
+      font-size: 0.75rem;
     }
 
-    input[type=text] {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.9rem;
-      padding: 0.5rem 0.75rem;
-      outline: none;
-      transition: border 0.2s;
-    }
+    /* ── DESKTOP OVERRIDES (≥ 640px) ── */
+    @media (min-width: 640px) {
+      .app {
+        padding: 0 1.5rem 4rem;
+      }
 
-    input[type=text]:focus {
-      border-color: var(--accent);
-    }
+      header {
+        padding: 1.5rem 0 1.5rem;
+      }
 
-    @media (max-width: 600px) {
-      .quiz-header {
-        flex-direction: column;
+      .badge {
+        max-width: none;
       }
 
       .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(5, 1fr);
+      }
+
+      .mode-btn-group {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+
+      .mode-btn-group .btn {
+        flex: 1;
+        min-width: 170px;
+        justify-content: center;
+      }
+
+      .config-row {
+        flex-direction: row;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .config-label {
+        min-width: 150px;
+        flex-shrink: 0;
+      }
+
+      input[type=number] {
+        width: 100px;
+      }
+
+      select {
+        width: auto;
+      }
+
+      .quiz-header {
+        position: static;
+        border-bottom: none;
+        margin-bottom: 1.25rem;
+      }
+
+      .quiz-actions {
+        position: static;
+        flex-direction: row;
+        justify-content: space-between;
+        background: transparent;
+        border-top: none;
+        padding: 0;
+      }
+
+      .quiz-actions-secondary {
+        flex-wrap: nowrap;
+      }
+
+      .quiz-actions-primary {
+        flex: 0 0 auto;
+      }
+
+      .quiz-actions-primary .btn,
+      .quiz-actions-primary .btn-primary {
+        flex: none;
+      }
+
+      .manage-btn-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .manage-btn-grid .btn-danger {
+        width: auto;
+      }
+
+      .modal {
+        border-radius: 16px;
+        max-width: 480px;
+        margin-bottom: 0;
+        /* centered not bottom-sheet */
+      }
+
+      .modal-overlay {
+        align-items: center;
+      }
+
+      .modal-actions .btn {
+        flex: none;
       }
     }
   </style>
@@ -992,15 +1220,15 @@
   <div class="app">
     <header>
       <div class="logo">Quiz<span>Gov</span></div>
-      <div style="display: flex; align-items: center; gap: 1rem;">
+      <div style="display:flex;align-items:center;gap:0.6rem;">
         <div class="badge">Funzionario della Comunicazione — MI</div>
         <button class="theme-toggle" onclick="toggleTheme()" title="Attiva/disattiva modalità chiara">🌙</button>
       </div>
     </header>
-
+ 
     <!-- HOME SCREEN -->
     <div class="screen active" id="screen-home">
-
+ 
       <!-- STATS -->
       <div class="stats-grid" id="home-stats">
         <div class="stat-box">
@@ -1024,30 +1252,27 @@
           <div class="stat-label">Da eliminare</div>
         </div>
       </div>
-
+ 
       <!-- TABS -->
       <div class="tabs">
         <button class="tab active" onclick="switchTab('simulate')">🎯 Simula</button>
         <button class="tab" onclick="switchTab('manage')">📚 Banca Dati</button>
         <button class="tab" onclick="switchTab('history')">📊 Storico</button>
       </div>
-
+ 
       <!-- TAB: SIMULATE -->
       <div id="tab-simulate">
         <div class="card">
           <div class="card-title">Configura la simulazione</div>
           <div class="card-sub">Scegli la modalità di composizione del test</div>
-
+ 
           <!-- MODE TOGGLE -->
-          <div style="display:flex;gap:0.5rem;margin-bottom:1.5rem;flex-wrap:wrap">
-            <button class="btn btn-primary btn-sm" id="mode-btn-official" onclick="setMode('official')"
-              style="flex:1;min-width:180px">🏛 Ufficiale (40 domande)</button>
-            <button class="btn btn-secondary btn-sm" id="mode-btn-custom" onclick="setMode('custom')"
-              style="flex:1;min-width:180px">⚙️ Personalizzata</button>
-            <button class="btn btn-secondary btn-sm" id="mode-btn-review" onclick="setMode('review')"
-              style="flex:1;min-width:180px">🎯 Ripassa errori</button>
+          <div class="mode-btn-group">
+            <button class="btn btn-primary btn-sm" id="mode-btn-official" onclick="setMode('official')">🏛 Ufficiale (40 domande)</button>
+            <button class="btn btn-secondary btn-sm" id="mode-btn-custom" onclick="setMode('custom')">⚙️ Personalizzata</button>
+            <button class="btn btn-secondary btn-sm" id="mode-btn-review" onclick="setMode('review')">🎯 Ripassa errori</button>
           </div>
-
+ 
           <!-- OFFICIAL MODE INFO -->
           <div id="mode-official-panel">
             <div class="csv-info" style="margin-top:0;margin-bottom:1.25rem">
@@ -1066,12 +1291,11 @@
               </select>
             </div>
           </div>
-
+ 
           <!-- CUSTOM MODE -->
           <div id="mode-custom-panel" style="display:none">
             <div style="margin-bottom:1.25rem">
-              <div
-                style="font-size:0.82rem;color:var(--text-dim);margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:0.06em;">
+              <div style="font-size:0.78rem;color:var(--text-dim);margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:0.06em;">
                 Categorie</div>
               <div class="cat-list" id="cat-chips"></div>
             </div>
@@ -1091,17 +1315,14 @@
               </select>
             </div>
           </div>
-
+ 
           <!-- REVIEW MODE -->
           <div id="mode-review-panel" style="display:none">
-            <div
-              style="background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2);border-radius:10px;padding:1rem;margin-bottom:1.5rem">
-              <div style="color:var(--green);font-weight:500;margin-bottom:0.5rem">🎯 Ripassa le domande sbagliate</div>
-              <div style="font-size:0.85rem;color:var(--text-dim);line-height:1.6">
-                <p>Questa modalità estrae tutte le domande che hai sbagliato o saltato nelle simulazioni precedenti,
-                  ordinate per frequenza di errore.</p>
-                <p style="margin-top:0.5rem">Le domande più sbagliate appariranno prima. Una domanda esce da questa
-                  lista quando la rispondi correttamente più volte.</p>
+            <div style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.18);border-radius:10px;padding:1rem;margin-bottom:1.25rem">
+              <div style="color:var(--green);font-weight:500;margin-bottom:0.4rem">🎯 Ripassa le domande sbagliate</div>
+              <div style="font-size:0.83rem;color:var(--text-dim);line-height:1.6">
+                <p>Questa modalità estrae tutte le domande che hai sbagliato o saltato nelle simulazioni precedenti, ordinate per frequenza di errore.</p>
+                <p style="margin-top:0.4rem">Le domande più sbagliate appariranno prima. Una domanda esce da questa lista quando la rispondi correttamente più volte.</p>
               </div>
             </div>
             <div class="config-row">
@@ -1110,22 +1331,21 @@
             </div>
             <div class="config-row">
               <span class="config-label">Modalità revisione</span>
-              <select id="cfg-review-review" style="width:auto" onchange="saveCurrentSettings()">
+              <select id="cfg-review-review" onchange="saveCurrentSettings()">
                 <option value="immediate">✓ Subito (vedo risultati al momento)</option>
                 <option value="final">✓ Finale (rivedo tutto alla fine)</option>
               </select>
             </div>
-            <div
-              style="margin-top:1rem;padding:0.75rem;background:var(--surface2);border-radius:8px;border:1px solid var(--border);font-size:0.82rem;color:var(--text-dim)">
+            <div style="margin-top:0.85rem;padding:0.7rem 0.9rem;background:var(--surface2);border-radius:8px;border:1px solid var(--border);font-size:0.8rem;color:var(--text-dim)">
               <span id="review-questions-count">0 domande sbagliate</span> disponibili per il ripasso
             </div>
           </div>
-
+ 
           <div class="divider"></div>
-          <button class="btn btn-primary" onclick="startQuiz()" id="start-btn">Inizia simulazione →</button>
+          <button class="btn btn-primary" onclick="startQuiz()" id="start-btn" style="width:100%">Inizia simulazione →</button>
         </div>
       </div>
-
+ 
       <!-- TAB: MANAGE -->
       <div id="tab-manage" style="display:none">
         <div class="card">
@@ -1135,8 +1355,7 @@
             <input type="file" accept=".csv" id="csv-input" onchange="handleCSV(this)">
             <div class="upload-icon">📂</div>
             <div class="upload-text">Trascina un file CSV o <strong>clicca per sceglierlo</strong></div>
-            <div style="font-size:0.75rem;color:var(--text-dim);margin-top:0.5rem">Formato: UTF-8, separatore virgola o
-              punto-e-virgola</div>
+            <div style="font-size:0.73rem;color:var(--text-dim);margin-top:0.4rem">Formato: UTF-8, separatore virgola o punto-e-virgola</div>
           </div>
           <div class="csv-info">
             <strong style="color:var(--text)">Formato CSV richiesto — colonne obbligatorie:</strong><br>
@@ -1144,40 +1363,27 @@
             <code>risposta_d</code> (opzionale) · <code>corretta</code> · <code>macrocategoria</code><br><br>
             <strong style="color:var(--text)">Per i quesiti situazionali</strong> usa <code>macrocategoria</code> =
             <code>Situazionali</code> e sostituisci <code>corretta</code> con:<br>
-            <code>efficace_alta</code> · <code>efficace_neutra</code> · <code>efficace_bassa</code> (lettere
-            A/B/C/D)<br><br>
+            <code>efficace_alta</code> · <code>efficace_neutra</code> · <code>efficace_bassa</code> (lettere A/B/C/D)<br><br>
             <strong style="color:var(--text)">Categorie standard:</strong> Diritto_Amministrativo ·
             Comunicazione_Istituzionale · Teoria_Comunicazione · Inglese · Logica · Situazionali · Uso_delle_tecnologie
           </div>
-          <div style="margin-top:1rem">
+ 
+          <!-- Manage buttons in a responsive grid -->
+          <div class="manage-btn-grid">
             <button class="btn btn-secondary btn-sm" onclick="downloadTemplate()">⬇ Scarica template CSV</button>
-            <button class="btn btn-secondary btn-sm" style="margin-left:0.5rem" onclick="exportBackup()">💾 Backup
-              JSON</button>
-            <button class="btn btn-secondary btn-sm" style="margin-left:0.5rem"
-              onclick="document.getElementById('json-import-input').click()">
+            <button class="btn btn-secondary btn-sm" onclick="exportBackup()">💾 Backup JSON</button>
+            <button class="btn btn-secondary btn-sm" onclick="document.getElementById('json-import-input').click()">
               📥 Importa backup JSON
             </button>
-
-            <input type="file" id="json-import-input" accept=".json" style="display:none"
-              onchange="handleJSONImport(this)">
-            <button class="btn btn-danger btn-sm" style="margin-left:0.5rem" onclick="confirmClear()">🗑 Svuota banca
-              dati</button>
+            <button class="btn btn-danger btn-sm" onclick="confirmClear()">🗑 Svuota banca dati</button>
           </div>
+          <input type="file" id="json-import-input" accept=".json" style="display:none" onchange="handleJSONImport(this)">
         </div>
-
+ 
         <div class="card">
           <div class="card-title">Domande in banca dati</div>
-          <div style="margin:1rem 0">
-            <input type="text" id="db-search" placeholder="Cerca tra le domande..." oninput="renderDBTable()" style="
-      width:100%;
-      background:var(--surface2);
-      border:1px solid var(--border);
-      border-radius:10px;
-      color:var(--text);
-      padding:0.8rem 1rem;
-      font-family:'DM Sans',sans-serif;
-      outline:none;
-    ">
+          <div style="margin:0.85rem 0">
+            <input type="text" id="db-search" placeholder="Cerca tra le domande..." oninput="renderDBTable()">
           </div>
           <div id="db-table-container">
             <div class="empty-state">
@@ -1187,7 +1393,7 @@
           </div>
         </div>
       </div>
-
+ 
       <!-- TAB: HISTORY -->
       <div id="tab-history" style="display:none">
         <div class="card">
@@ -1200,8 +1406,8 @@
           </div>
         </div>
       </div>
-    </div>
-
+    </div><!-- end screen-home -->
+ 
     <!-- QUIZ SCREEN -->
     <div class="screen" id="screen-quiz">
       <div class="quiz-header">
@@ -1211,7 +1417,7 @@
       <div class="progress-bar">
         <div class="progress-fill" id="progress-fill" style="width:0%"></div>
       </div>
-
+ 
       <div class="question-card">
         <div class="question-meta">
           <span class="q-num" id="q-num">#1</span>
@@ -1219,30 +1425,28 @@
         </div>
         <div class="question-text" id="q-text">Testo della domanda</div>
       </div>
-
+ 
       <ul class="options-list" id="options-list"></ul>
-
+ 
+      <!-- Fixed bottom bar on mobile, inline on desktop -->
       <div class="quiz-actions">
-        <div style="display:flex;gap:0.75rem;align-items:center;flex-wrap:wrap">
-          <button class="skip-link" onclick="skipQuestion()">Salta domanda →</button>
-          <button class="skip-link" onclick="openEditQuestionModal()" style="color:var(--gold)">✏️ Segnala
-            errore</button>
-          <button class="skip-link" onclick="toggleFavoriteCurrentQuestion()" style="color:var(--accent2)">⭐
-            Preferita</button>
-          <button class="skip-link" onclick="toggleFlagCurrentQuestion()" style="color:var(--red)">🚩 Da
-            eliminare</button>
+        <div class="quiz-actions-secondary">
+          <button class="skip-link" onclick="skipQuestion()">Salta →</button>
+          <button class="skip-link" onclick="openEditQuestionModal()" style="color:var(--gold)">✏️ Errore</button>
+          <button class="skip-link" onclick="toggleFavoriteCurrentQuestion()" style="color:var(--accent2)">⭐ Preferita</button>
+          <button class="skip-link" onclick="toggleFlagCurrentQuestion()" style="color:var(--red)">🚩 Elimina</button>
         </div>
-        <div style="display:flex;gap:0.75rem">
+        <div class="quiz-actions-primary">
           <button class="btn btn-secondary" onclick="confirmAbort()">Abbandona</button>
           <button class="btn btn-primary" id="btn-next" onclick="nextQuestion()" disabled>Avanti →</button>
         </div>
       </div>
     </div>
-
+ 
     <!-- RESULTS SCREEN -->
     <div class="screen" id="screen-results">
       <div class="card" style="text-align:center">
-        <div class="card-title" style="margin-bottom:0.5rem">Simulazione completata</div>
+        <div class="card-title" style="margin-bottom:0.4rem">Simulazione completata</div>
         <div class="card-sub" id="res-date"></div>
         <div class="score-circle" id="score-circle">
           <div class="score-inner">
@@ -1252,23 +1456,23 @@
         </div>
         <div class="result-pills">
           <div class="pill pill-green" id="res-correct">✓ 0 corrette</div>
-          <div class="pill pill-red" id="res-wrong">✗ 0 errate</div>
-          <div class="pill pill-gray" id="res-skip">— 0 saltate</div>
+          <div class="pill pill-red"   id="res-wrong">✗ 0 errate</div>
+          <div class="pill pill-gray"  id="res-skip">— 0 saltate</div>
         </div>
-        <div id="res-outcome" style="font-size:1rem;margin-bottom:1.5rem;font-weight:500"></div>
-        <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+        <div id="res-outcome" style="font-size:0.95rem;margin-bottom:1.25rem;font-weight:500"></div>
+        <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
           <button class="btn btn-secondary" onclick="goHome()">← Home</button>
-          <button class="btn btn-primary" onclick="startQuiz()">Ripeti simulazione</button>
+          <button class="btn btn-primary"   onclick="startQuiz()">Ripeti simulazione</button>
         </div>
       </div>
-
+ 
       <div class="card">
-        <div class="card-title" style="margin-bottom:1.25rem">Revisione risposte</div>
+        <div class="card-title" style="margin-bottom:1rem">Revisione risposte</div>
         <div class="review-list" id="review-list"></div>
       </div>
     </div>
-  </div>
-
+  </div><!-- end .app -->
+ 
   <!-- MODAL -->
   <div class="modal-overlay" id="modal">
     <div class="modal">
@@ -1280,39 +1484,38 @@
       </div>
     </div>
   </div>
-
+ 
   <!-- EDIT QUESTION MODAL -->
   <div class="modal-overlay" id="edit-modal">
     <div class="modal" style="max-width:560px">
       <h3>✏️ Modifica domanda</h3>
       <p style="margin-bottom:1rem">Correggi la risposta corretta o la categoria di questa domanda.</p>
       <div id="edit-modal-body"></div>
-      <div class="modal-actions" style="margin-top:1.5rem">
+      <div class="modal-actions" style="margin-top:1.25rem">
         <button class="btn btn-secondary" onclick="closeEditModal()">Annulla</button>
-        <button class="btn btn-primary" onclick="saveQuestionEdit()">💾 Salva</button>
+        <button class="btn btn-primary"   onclick="saveQuestionEdit()">💾 Salva</button>
       </div>
     </div>
   </div>
-
+ 
   <!-- RESUME QUIZ MODAL -->
   <div class="modal-overlay" id="resume-modal">
     <div class="modal">
       <h3>▶ Quiz interrotto</h3>
       <p>È stato trovato un quiz non completato. Vuoi riprendere da dove l'hai lasciato?</p>
-      <div id="resume-modal-info"
-        style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:1.5rem;font-size:0.9rem;color:var(--text-dim)">
-        <div style="margin-bottom:0.5rem"><strong style="color:var(--text)">Informazioni sessione:</strong></div>
+      <div id="resume-modal-info" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:0.9rem;margin-bottom:1.25rem;font-size:0.88rem;color:var(--text-dim)">
+        <div style="margin-bottom:0.4rem"><strong style="color:var(--text)">Informazioni sessione:</strong></div>
         <div>Domande: <span id="resume-total">0</span></div>
         <div>Progresso: <span id="resume-progress">0</span>%</div>
         <div>Tempo rimasto: <span id="resume-time">00:00</span></div>
       </div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="discardQuizSession()">🗑 Scarta</button>
-        <button class="btn btn-primary" onclick="resumeQuiz()">▶ Riprendi</button>
+        <button class="btn btn-primary"   onclick="resumeQuiz()">▶ Riprendi</button>
       </div>
     </div>
   </div>
-
+ 
   <div id="toast"></div>
 
   <script>
@@ -1343,8 +1546,32 @@
     async function syncDBFromSupabase() {
       if (!supabaseClient) return getDB();
       try {
-        const { data, error } = await supabaseClient.from('questions').select('*');
-        if (error) throw error;
+        const allData = [];
+        const chunkSize = 1000;
+        let from = 0;
+        let finished = false;
+
+        while (!finished) {
+          const { data, error } = await supabaseClient
+            .from('questions')
+            .select('*')
+            .range(from, from + chunkSize - 1);
+
+          if (error) throw error;
+
+          if (data && data.length) {
+            allData.push(...data);
+            from += chunkSize;
+
+            if (data.length < chunkSize) {
+              finished = true;
+            }
+          } else {
+            finished = true;
+          }
+        }
+
+        const data = allData;
         if (data) {
           localStorage.setItem(DB_KEY, JSON.stringify(data));
           return data;
@@ -1359,28 +1586,35 @@
       localStorage.setItem(DB_KEY, JSON.stringify(arr));
       if (supabaseClient) {
         // Salva le modifiche su Supabase in background
-        arr.forEach(q => {
-          if (q.id) {
-            supabaseClient.from('questions').upsert({
-              id: q.id,
-              domanda: q.domanda,
-              risposta_a: q.risposta_a,
-              risposta_b: q.risposta_b,
-              risposta_c: q.risposta_c,
-              risposta_d: q.risposta_d,
-              corretta: q.corretta,
-              macrocategoria: q.macrocategoria,
-              is_situazionale: q.isSituazionale,
-              efficace_alta: q.efficace_alta,
-              efficace_neutra: q.efficace_neutra,
-              efficace_bassa: q.efficace_bassa
-            }).then(({ error }) => {
-              if (error) {
-                console.warn('Errore sync Supabase', error);
-              }
-            });
-          }
-        });
+        // Upsert in chunks of 200 to avoid potential issues with large payloads
+        const payload = arr
+          .filter(q => q.id)
+          .map(q => ({
+            id: q.id,
+            domanda: q.domanda,
+            risposta_a: q.risposta_a,
+            risposta_b: q.risposta_b,
+            risposta_c: q.risposta_c,
+            risposta_d: q.risposta_d,
+            corretta: q.corretta,
+            macrocategoria: q.macrocategoria,
+            is_situazionale: isSituationalQuestion(q),
+            efficace_alta: q.efficace_alta,
+            efficace_neutra: q.efficace_neutra,
+            efficace_bassa: q.efficace_bassa
+          }));
+
+        const chunkSize = 200;
+        for (let i = 0; i < payload.length; i += chunkSize) {
+          const chunk = payload.slice(i, i + chunkSize);
+          supabaseClient.from('questions').upsert(chunk).then(({ error }) => {
+            if (error) {
+              console.warn(`Errore sync Supabase chunk ${Math.floor(i / chunkSize) + 1}:`, error);
+            } else {
+              console.log(`Sync Supabase chunk ${Math.floor(i / chunkSize) + 1}/${Math.ceil(payload.length / chunkSize)} completato (${chunk.length} elementi)`);
+            }
+          });
+        }
       }
     }
 
@@ -1395,16 +1629,19 @@
         const { data, error } = await supabaseClient.from('sessions').select('*').order('created_at', { ascending: false });
         if (error) throw error;
         if (data) {
+          const localNonOfficial = getHistory().filter(h => h.mode && h.mode !== 'official');
           const formatted = data.map(row => ({
             date: row.date,
             total: row.total,
             score: row.score,
             correct: row.correct,
             wrong: row.wrong,
-            skip: row.skip
+            skip: row.skip,
+            mode: 'official'
           }));
-          localStorage.setItem(HISTORY_KEY, JSON.stringify(formatted));
-          return formatted;
+          const merged = [...formatted, ...localNonOfficial];
+          localStorage.setItem(HISTORY_KEY, JSON.stringify(merged));
+          return merged;
         }
       } catch (e) {
         console.warn('Errore caricamento history da Supabase, uso localStorage', e);
@@ -1415,7 +1652,8 @@
     function saveHistory(arr) {
       localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
       if (supabaseClient && arr.length > 0) {
-        const last = arr[0]; // Ultimo test
+        const last = arr[arr.length - 1]; // Ultimo test
+        if (last.mode && last.mode !== 'official') return;
         supabaseClient.from('sessions').insert({
           date: last.date,
           total: last.total,
@@ -1477,6 +1715,11 @@
       'Situazionali': '#f59e0b',
       'Uso_delle_tecnologie': '#22c55e'
     };
+
+    // Helper function to check if a question is situational (handles both naming conventions)
+    function isSituationalQuestion(q) {
+      return q?.isSituazionale || q?.is_situazionale || false;
+    }
 
     function catColor(c) { return CAT_COLORS[c] || '#94a3b8'; }
 
@@ -1960,8 +2203,9 @@
       const flagged = db.filter(q => q.flaggedForDeletion).length;
       document.getElementById('stat-flagged').textContent = flagged;
       document.getElementById('stat-tests').textContent = hist.length;
-      if (hist.length) {
-        const scores = hist.map(h => h.score);
+      const officialHist = hist.filter(h => !h.mode || h.mode === 'official');
+      if (officialHist.length) {
+        const scores = officialHist.map(h => h.score);
         document.getElementById('stat-best').textContent = Math.max(...scores).toFixed(2);
         document.getElementById('stat-avg').textContent = (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(2);
       } else {
@@ -2146,12 +2390,20 @@
               efficace_bassa: q.efficace_bassa
             }));
 
-            const { error } = await supabaseClient
-              .from('questions')
-              .upsert(payload);
-
-            if (error) {
-              console.warn(error);
+            // Upsert in chunks of 200 to avoid potential issues with large payloads
+            const chunkSize = 200;
+            for (let i = 0; i < payload.length; i += chunkSize) {
+              const chunk = payload.slice(i, i + chunkSize);
+              try {
+                const { error } = await supabaseClient.from('questions').upsert(chunk);
+                if (error) {
+                  console.warn(`Errore upsert chunk ${Math.floor(i / chunkSize) + 1}:`, error);
+                } else {
+                  console.log(`Chunk ${Math.floor(i / chunkSize) + 1}/${Math.ceil(payload.length / chunkSize)} upsertato con successo (${chunk.length} elementi)`);
+                }
+              } catch (err) {
+                console.error(`Errore inaspettato durante l'upsert del chunk ${Math.floor(i / chunkSize) + 1}:`, err);
+              }
             }
           }
 
@@ -2422,7 +2674,7 @@
 
             <td>
 
-              ${q.isSituazionale
+               ${isSituationalQuestion(q)
 
             ?
 
@@ -2522,12 +2774,21 @@
       }
       let html = '<table><thead><tr><th>Data</th><th>Domande</th><th>Punteggio</th><th>Esito</th></tr></thead><tbody>';
       hist.forEach(h => {
-        const passed = h.score >= 21;
+        const mode = h.mode || 'official';
+        const isOfficial = mode === 'official';
+        const passed = isOfficial && h.score >= 21;
+        const answered = h.total - (h.skip || 0);
+        const pctCorrect = typeof h.pctCorrect === 'number'
+          ? h.pctCorrect
+          : answered > 0 ? ((h.correct || 0) / answered) * 100 : 0;
+        const scoreText = isOfficial ? `${h.score.toFixed(2)} / 30` : `${pctCorrect.toFixed(1)}% corrette`;
+        const outcomeText = isOfficial ? (passed ? 'Superato' : 'Non superato') : (mode === 'review' ? 'Ripasso' : 'Personalizzata');
+        const outcomeColor = isOfficial ? (passed ? 'var(--green)' : 'var(--red)') : 'var(--neutral)';
         html += `<tr>
       <td style="font-size:0.8rem;color:var(--text-dim)">${h.date}</td>
       <td style="font-size:0.82rem">${h.total}</td>
-      <td style="font-family:'DM Mono',monospace;color:${passed ? 'var(--green)' : 'var(--red)'}">${h.score.toFixed(2)} / 30</td>
-      <td><span class="tag" style="background:${passed ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)'};color:${passed ? 'var(--green)' : 'var(--red)'}">${passed ? 'Superato' : 'Non superato'}</span></td>
+      <td style="font-family:'DM Mono',monospace;color:${isOfficial ? (passed ? 'var(--green)' : 'var(--red)') : 'var(--text)'}">${scoreText}</td>
+      <td><span class="tag" style="background:${isOfficial ? (passed ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)') : 'var(--surface2)'};color:${outcomeColor}">${outcomeText}</span></td>
     </tr>`;
       });
       html += '</tbody></table>';
@@ -2650,7 +2911,7 @@
 
       const catEl = document.getElementById('q-cat');
       catEl.textContent = q.macrocategoria.replace(/_/g, ' ');
-      catEl.className = 'q-cat' + (q.isSituazionale ? ' situazionale' : '');
+      catEl.className = 'q-cat' + (isSituationalQuestion(q) ? ' situazionale' : '');
 
       document.getElementById('q-text').textContent = q.domanda;
       document.getElementById('btn-next').disabled = true;
@@ -2693,7 +2954,7 @@
 
       document.querySelectorAll('.option-btn').forEach(btn => { btn.disabled = true; btn.classList.remove('selected'); });
 
-      if (q.isSituazionale) {
+      if (isSituationalQuestion(q)) {
         // colour all three levels
         const opts = ['a', 'b', 'c', 'd'].filter(l => q['risposta_' + l]);
         opts.forEach(l => {
@@ -2748,7 +3009,7 @@
     }
 
     function computeScore(q, letter) {
-      if (q.isSituazionale) {
+      if (isSituationalQuestion(q)) {
         const ul = letter.toUpperCase();
         if (ul === q.efficace_alta) return SCORING.Situazionali.high;
         if (ul === q.efficace_neutra) return SCORING.Situazionali.neutral;
@@ -2767,49 +3028,79 @@
       let rawScore = 0, correct = 0, wrong = 0, skip = 0;
       quiz.answers.forEach(a => {
         if (a === null) { skip++; }
-        else { rawScore += a.score; if (a.score === SCORING.default.correct || a.score === SCORING.Situazionali.high) correct++; else wrong++; }
+        else {
+          rawScore += a.score;
+          if (a.score === SCORING.default.correct) correct++;
+          else if (a.score < 0) wrong++;
+        }
       });
-
-      // Normalize to /30 scale
-      const maxPossible = quiz.total * SCORING.default.correct;
-      const score30 = Math.max(0, Math.min(30, (rawScore / maxPossible) * 30));
 
       const now = new Date();
       const dateStr = now.toLocaleDateString('it-IT') + ' ' + now.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
 
-      // Save history
-      const hist = getHistory();
-      hist.push({ date: dateStr, total: quiz.total, score: score30, correct, wrong, skip });
-      saveHistory(hist);
-
-      // Update question statistics
-      quiz.questions.forEach((q, i) => {
-        const answer = quiz.answers[i];
-        const isSkipped = answer === null;
-        const isCorrect = !isSkipped && (q.isSituazionale ? answer.score === SCORING.Situazionali.high : answer.score === SCORING.default.correct);
-        updateQuestionStats(q.id, isCorrect, isSkipped);
-      });
-
-      updateHomeStats();
-      renderHistory();
-
-      // Score circle
-      const pct = (score30 / 30) * 100;
-      const color = score30 >= 21 ? 'var(--green)' : score30 >= 15 ? 'var(--gold)' : 'var(--red)';
-      document.getElementById('score-circle').style.background = `conic-gradient(${color} ${pct}%, var(--surface2) ${pct}%)`;
-      document.getElementById('res-score').textContent = score30.toFixed(2);
       document.getElementById('res-date').textContent = dateStr;
       document.getElementById('res-correct').textContent = `✓ ${correct} corrette`;
       document.getElementById('res-wrong').textContent = `✗ ${wrong} errate`;
       document.getElementById('res-skip').textContent = `— ${skip} saltate`;
 
+      const scoreCircle = document.getElementById('score-circle');
       const outcome = document.getElementById('res-outcome');
-      if (score30 >= 21) {
-        outcome.style.color = 'var(--green)';
-        outcome.textContent = '🎉 Soglia superata! (min. 21/30)';
+      const scoreMax = document.querySelector('#score-circle .score-max');
+
+      // Update question statistics
+      quiz.questions.forEach((q, i) => {
+        const answer = quiz.answers[i];
+        const isSkipped = answer === null;
+        const isCorrect = !isSkipped && answer.score === SCORING.default.correct;
+        updateQuestionStats(q.id, isCorrect, isSkipped);
+      });
+
+      if (quizMode === 'official') {
+        // Normalize to /30 scale
+        const maxPossible = quiz.total * SCORING.default.correct;
+        const score30 = Math.max(0, Math.min(30, (rawScore / maxPossible) * 30));
+
+        // Save history
+        const hist = getHistory();
+        hist.push({ date: dateStr, total: quiz.total, score: score30, correct, wrong, skip, mode: quizMode });
+        saveHistory(hist);
+
+        updateHomeStats();
+        renderHistory();
+
+        // Score circle
+        const pct = (score30 / 30) * 100;
+        const color = score30 >= 21 ? 'var(--green)' : score30 >= 15 ? 'var(--gold)' : 'var(--red)';
+        scoreCircle.style.display = 'flex';
+        scoreCircle.style.background = `conic-gradient(${color} ${pct}%, var(--surface2) ${pct}%)`;
+        if (scoreMax) scoreMax.style.display = 'block';
+        document.getElementById('res-score').textContent = score30.toFixed(2);
+
+        if (score30 >= 21) {
+          outcome.style.color = 'var(--green)';
+          outcome.textContent = '🎉 Soglia superata! (min. 21/30)';
+        } else {
+          outcome.style.color = 'var(--red)';
+          outcome.textContent = `❌ Soglia non raggiunta (${(21 - score30).toFixed(2)} punti mancanti)`;
+        }
       } else {
-        outcome.style.color = 'var(--red)';
-        outcome.textContent = `❌ Soglia non raggiunta (${(21 - score30).toFixed(2)} punti mancanti)`;
+        const answered = quiz.total - skip;
+        const pctCorrect = answered > 0 ? (correct / answered) * 100 : 0;
+
+        const hist = getHistory();
+        hist.push({ date: dateStr, total: quiz.total, score: rawScore, correct, wrong, skip, mode: quizMode, pctCorrect });
+        saveHistory(hist);
+
+        updateHomeStats();
+        renderHistory();
+
+        scoreCircle.style.display = 'none';
+        if (scoreMax) scoreMax.style.display = 'none';
+        document.getElementById('res-score').textContent = '—';
+        outcome.style.color = 'var(--text-dim)';
+        outcome.textContent = quizMode === 'custom'
+          ? `Risposte corrette: ${pctCorrect.toFixed(1)}%`
+          : `Sessione di ripasso completata · ${pctCorrect.toFixed(1)}% corrette sulle risposte date`;
       }
 
       // Review
@@ -2819,21 +3110,21 @@
         const isSkip = ans === null;
         const letter = isSkip ? null : ans.letter.toUpperCase();
         const sc = isSkip ? 0 : ans.score;
-        const isCorrect = !isSkip && (q.isSituazionale ? ans.score === SCORING.Situazionali.high : letter === q.corretta);
-        const isWrong = !isSkip && !isCorrect;
-        const cls = isSkip ? 'skip-item' : isCorrect ? 'correct-item' : 'wrong-item';
+        const isCorrect = !isSkip && (isSituationalQuestion(q) ? ans.score === SCORING.Situazionali.high : letter === q.corretta);
+        const isWrong = !isSkip && sc < 0;
+        const cls = isSkip ? 'skip-item' : isCorrect ? 'correct-item' : isWrong ? 'wrong-item' : '';
         const scoreColor = sc > 0 ? 'var(--green)' : sc < 0 ? 'var(--red)' : 'var(--text-dim)';
         const badge = `<span class="review-score-badge" style="background:${scoreColor}22;color:${scoreColor}">${sc > 0 ? '+' : ''}${sc}</span>`;
 
         let answersHtml = '';
-        if (q.isSituazionale) {
+        if (isSituationalQuestion(q)) {
           const opts = ['a', 'b', 'c', 'd'].filter(l => q['risposta_' + l]);
           answersHtml = opts.map(l => {
             const ul = l.toUpperCase();
             const isHigh = ul === q.efficace_alta, isNeutral = ul === q.efficace_neutra;
             const chosen = ul === letter;
             let cls2 = 'review-ans';
-            if (chosen && !isHigh) cls2 += ' your-wrong';
+            if (chosen && sc < 0) cls2 += ' your-wrong';
             if (chosen && isHigh) cls2 += ' your-correct';
             const lbl = isHigh ? '★ più efficace' : isNeutral ? '◇ neutra' : '✗ meno efficace';
             return `<div class="${cls2}">${ul}. ${q['risposta_' + l]} <em style="opacity:0.6">${lbl}</em>${chosen ? ' ← tua risposta' : ''}</div>`;
@@ -3023,7 +3314,7 @@
 
           if (!q) return;
 
-          if (q.isSituazionale) {
+          if (isSituationalQuestion(q)) {
 
             q.efficace_alta = sel.value;
 
@@ -3062,7 +3353,7 @@
 
     function renderEditModal(q) {
       const allCats = [...new Set(getDB().map(x => x.macrocategoria))].filter(Boolean);
-      const isSit = q.isSituazionale;
+      const isSit = isSituationalQuestion(q);
       const opts = ['a', 'b', 'c', 'd'].filter(l => q['risposta_' + l]);
 
       let html = `
@@ -3121,12 +3412,13 @@
       const idx = db.findIndex(x => x.id === editingQuestionId);
       if (idx === -1) { closeEditModal(); return; }
       const q = db[idx];
-      const isSit = q.isSituazionale;
+      const isSit = isSituationalQuestion(q);
 
       // update category
       const newCat = document.getElementById('edit-cat').value;
       q.macrocategoria = newCat;
       q.isSituazionale = newCat.toLowerCase() === 'situazionali';
+      q.is_situazionale = q.isSituazionale;
 
       if (!isSit) {
         const sel = document.querySelector('input[name="edit-correct"]:checked');
