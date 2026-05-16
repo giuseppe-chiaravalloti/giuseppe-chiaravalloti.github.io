@@ -1978,7 +1978,15 @@
     }
 
     function getDB() {
-      return getLocalJSON(userKey(DB_KEY), []);
+      const userDB = getLocalJSON(userKey(DB_KEY), []);
+      if (userDB.length) return userDB;
+
+      const globalQuestions = getLocalJSON(GLOBAL_DB_KEY, []);
+      if (globalQuestions.length) {
+        return mergeQuestionsWithState(globalQuestions, getUserQuestionState());
+      }
+
+      return getLocalJSON(DB_KEY, []);
     }
 
     function getUserQuestionState() {
@@ -2080,9 +2088,16 @@
 
     async function syncDBFromSupabase() {
       if (!supabaseClient) return getDB();
+      const cachedDB = getDB();
       try {
         const questions = await fetchAllQuestions();
         const state = await fetchUserQuestionState();
+
+        if (!questions.length && cachedDB.length) {
+          console.warn('Supabase ha restituito 0 domande: mantengo la cache locale esistente.');
+          return cachedDB;
+        }
+
         const merged = mergeQuestionsWithState(questions, state);
         setLocalJSON(GLOBAL_DB_KEY, questions.map(stripPersonalQuestionFields));
         setLocalJSON(userKey(DB_KEY), merged);
