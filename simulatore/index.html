@@ -2043,6 +2043,7 @@
       return {
         favorite: false,
         flaggedForDeletion: false,
+        deleted: false,
         shown: 0,
         correct: 0,
         wrong: 0,
@@ -2056,6 +2057,7 @@
       return {
         favorite: Boolean(row.favorite),
         flaggedForDeletion: Boolean(row.flaggedForDeletion ?? row.flagged_for_deletion),
+        deleted: Boolean(row.deleted ?? row.is_deleted ?? row.removed),
         shown: Number(row.shown || 0),
         correct: Number(row.correct || 0),
         wrong: Number(row.wrong || 0),
@@ -2069,6 +2071,7 @@
       const {
         favorite,
         flaggedForDeletion,
+        deleted,
         shown,
         correct,
         wrong,
@@ -2085,6 +2088,10 @@
         ...q,
         ...normalizeQuestionState(state[q.id])
       }));
+    }
+
+    function isQuestionDeleted(q) {
+      return Boolean(q?.deleted);
     }
 
     async function fetchAllQuestions() {
@@ -2170,6 +2177,7 @@
         question_id: questionId,
         favorite: Boolean(state.favorite),
         flagged_for_deletion: Boolean(state.flaggedForDeletion),
+        deleted: Boolean(state.deleted),
         shown: Number(state.shown || 0),
         correct: Number(state.correct || 0),
         wrong: Number(state.wrong || 0),
@@ -2198,9 +2206,18 @@
       }
 
       if (!supabaseClient || !currentUser) return;
-      const { error } = await supabaseClient
+      console.info('[STATE] Salvataggio user_question_state', { questionId, patch, finalState: next });
+      let { error } = await supabaseClient
         .from('user_question_state')
         .upsert(questionStatePayload(questionId, next), { onConflict: 'user_id,question_id' });
+      if (error && String(error.message || '').includes('deleted')) {
+        const fallbackPayload = questionStatePayload(questionId, next);
+        delete fallbackPayload.deleted;
+        console.warn('[STATE] Colonna deleted non disponibile su user_question_state, retry senza deleted. Aggiungere la colonna per sync cross-device.', error);
+        ({ error } = await supabaseClient
+          .from('user_question_state')
+          .upsert(fallbackPayload, { onConflict: 'user_id,question_id' }));
+      }
       if (error) console.warn('Errore salvataggio stato domanda Supabase', error);
     }
 
@@ -2392,7 +2409,7 @@
      * Ordinate per mistakeCount decrescente.
      */
     function getWrongQuestions() {
-      const db = getDB().filter(q => !q.flaggedForDeletion);
+      const db = getDB().filter(q => !isQuestionDeleted(q));
       const stats = getStats();
 
       return db
@@ -2413,7 +2430,7 @@
      * Ritorna: { totalSeen, totalCorrect, totalWrong, percentageCorrect, avgMistakeCount }
      */
     function calculateCategoryStats(category) {
-      const db = getDB().filter(q => q.macrocategoria === category && !q.flaggedForDeletion);
+      const db = getDB().filter(q => q.macrocategoria === category && !isQuestionDeleted(q));
       const stats = getStats();
 
       let totalSeen = 0, totalCorrect = 0, totalWrong = 0, totalMistakeCount = 0;
@@ -2576,7 +2593,7 @@
      * Ottiene le domande preferite.
      */
     function getFavoriteQuestions() {
-      return getDB().filter(q => q.favorite && !q.flaggedForDeletion);
+      return getDB().filter(q => q.favorite && !isQuestionDeleted(q));
     }
 
     // ============================================================
@@ -2941,7 +2958,7 @@
     }
 
     function updateOfficialPreview() {
-      const db = getDB();
+      const db = getDB().filter(q => !isQuestionDeleted(q));
       const el = document.getElementById('official-composition-preview');
       if (!db.length) { el.innerHTML = 'Carica domande per vedere la composizione disponibile.'; return; }
 
@@ -3008,7 +3025,7 @@
       const db = getDB();
       const hist = getHistory();
       document.getElementById('stat-total').textContent = db.length;
-      const flagged = db.filter(q => q.flaggedForDeletion).length;
+      const flagged = db.filter(q => q.flaggedForDeletion && !isQuestionDeleted(q)).length;
       document.getElementById('stat-flagged').textContent = flagged;
       document.getElementById('stat-tests').textContent = hist.length;
       const officialHist = hist.filter(h => !h.mode || h.mode === 'official');
@@ -3023,7 +3040,7 @@
     }
 
     function getCategories() {
-      const db = getDB();
+      const db = getDB().filter(q => !isQuestionDeleted(q));
       return [...new Set(db.map(q => q.macrocategoria))].filter(Boolean);
     }
 
@@ -3211,7 +3228,8 @@
       const filtered = db.filter(q => {
         const matchesSearch = !search || q.domanda.toLowerCase().includes(search);
         const matchesFlag = flaggedOnlyView ? q.flaggedForDeletion : true;
-        return matchesSearch && matchesFlag;
+        const matchesDeleted = flaggedOnlyView ? !isQuestionDeleted(q) : true;
+        return matchesSearch && matchesFlag && matchesDeleted;
       });
 
       if (!filtered.length) {
@@ -3265,7 +3283,7 @@
         .forEach(([cat, count]) => {
 
           const flaggedCount = filtered.filter(q =>
-            q.macrocategoria === cat && q.flaggedForDeletion
+            q.macrocategoria === cat && q.flaggedForDeletion && !isQuestionDeleted(q)
           ).length;
 
           const col = catColor(cat);
@@ -3335,9 +3353,10 @@
         const matchesCategory = q.macrocategoria === cat;
         const matchesSearch = q.domanda.toLowerCase().includes(search);
         const matchesFlag = flaggedOnlyView ? q.flaggedForDeletion : true;
+        const matchesDeleted = flaggedOnlyView ? !isQuestionDeleted(q) : true;
         const matchesFavorite = favoriteOnlyView ? q.favorite : true;
 
-        return matchesCategory && matchesSearch && matchesFlag && matchesFavorite;
+        return matchesCategory && matchesSearch && matchesFlag && matchesDeleted && matchesFavorite;
       });
 
       const container = document.getElementById('db-table-container');
@@ -3488,7 +3507,9 @@
             </td>
 
             <td>
-              ${q.flaggedForDeletion
+              ${isQuestionDeleted(q)
+            ? '<span class="flag-badge">🗑 Eliminata</span>'
+            : q.flaggedForDeletion
             ? '<span class="flag-badge">🚩 Da eliminare</span>'
             : '<span style="color:var(--text-dim);font-size:0.78rem">Attiva</span>'}
             </td>
@@ -3571,7 +3592,7 @@
     let timerInterval = null;
 
     function startQuiz() {
-      const db = getDB().filter(q => !q.flaggedForDeletion);
+      const db = getDB().filter(q => !isQuestionDeleted(q));
       if (!db.length) { showToast('❌ Nessuna domanda in banca dati'); return; }
 
       let questions = [];
@@ -4008,9 +4029,11 @@
           const db = getDB();
           const q = db.find(x => x.id === id);
           if (q) {
-            q.flaggedForDeletion = true;
+            q.deleted = true;
+            q.flaggedForDeletion = false;
             setLocalJSON(userKey(DB_KEY), db);
-            persistQuestionState(id, { flaggedForDeletion: true });
+            persistQuestionState(id, { deleted: true, flaggedForDeletion: false });
+            console.info('[DELETE] Domanda eliminata', { questionId: id, deleted: true, flaggedForDeletion: false });
           }
           updateHomeStats();
           renderCatChips();
@@ -4019,7 +4042,7 @@
           if (currentCategoryView === cat) {
             showCatDetail(cat);
           }
-          showToast('🚩 Domanda contrassegnata');
+          showToast('🗑 Domanda eliminata dai quiz');
         }
       );
     }
@@ -4053,9 +4076,10 @@
 
       const db = getDB();
       db.forEach(q => {
-        if (ids.includes(q.id)) {
+        if (ids.includes(q.id) && !isQuestionDeleted(q)) {
           q.flaggedForDeletion = true;
           persistQuestionState(q.id, { flaggedForDeletion: true });
+          console.info('[FLAG] Domanda contrassegnata da eliminare', { questionId: q.id, flaggedForDeletion: true, deleted: Boolean(q.deleted) });
         }
       });
       setLocalJSON(userKey(DB_KEY), db);
@@ -4094,8 +4118,10 @@
           const db = getDB();
           db.forEach(q => {
             if (ids.includes(q.id)) {
-              q.flaggedForDeletion = true;
-              persistQuestionState(q.id, { flaggedForDeletion: true });
+              q.deleted = true;
+              q.flaggedForDeletion = false;
+              persistQuestionState(q.id, { deleted: true, flaggedForDeletion: false });
+              console.info('[DELETE] Domanda eliminata da selezione', { questionId: q.id, deleted: true, flaggedForDeletion: false });
             }
           });
 
@@ -4109,7 +4135,7 @@
             showCatDetail(cat);
           }
 
-          showToast(`🚩 ${ids.length} domande contrassegnate`);
+          showToast(`🗑 ${ids.length} domande eliminate dai quiz`);
         }
       );
     }
@@ -4334,10 +4360,20 @@
         return;
       }
 
+      if (isQuestionDeleted(db[idx])) {
+        showToast('⚠ Domanda già eliminata dai quiz');
+        return;
+      }
+
       db[idx].flaggedForDeletion = !db[idx].flaggedForDeletion;
 
       setLocalJSON(userKey(DB_KEY), db);
       persistQuestionState(id, { flaggedForDeletion: db[idx].flaggedForDeletion });
+      console.info('[FLAG] Toggle da eliminare', {
+        questionId: id,
+        flaggedForDeletion: db[idx].flaggedForDeletion,
+        deleted: Boolean(db[idx].deleted)
+      });
       updateHomeStats();
       renderDBTable();
       updateOfficialPreview();
