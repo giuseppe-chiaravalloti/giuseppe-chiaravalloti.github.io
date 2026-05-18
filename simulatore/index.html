@@ -2634,6 +2634,15 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
         .filter(l => String(q?.['risposta_' + l] ?? '').trim() !== '');
     }
 
+    function shuffleArray(arr) {
+      const shuffled = arr.slice();
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
     function catColor(c) { return CAT_COLORS[c] || '#94a3b8'; }
 
     // ============================================================
@@ -3964,22 +3973,61 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
           q.macrocategoria === 'Teoria_Comunicazione'
         );
         const inglesePool = db.filter(q => q.macrocategoria === 'Inglese');
-        const informaticaPool = db.filter(q => q.macrocategoria === 'Informatica');
+        const informaticaPool = db.filter(q => q.macrocategoria === 'Uso_delle_tecnologie');
         const logicaPool = db.filter(q => q.macrocategoria === 'Logica');
         const sitPool = db.filter(q => q.macrocategoria === 'Situazionali');
 
         const picked = [
-          ...dirittoPool.sort(() => Math.random() - 0.5).slice(0, Math.min(12, dirittoPool.length)),
-          ...comunicazionePool.sort(() => Math.random() - 0.5).slice(0, Math.min(7, comunicazionePool.length)),
-          ...inglesePool.sort(() => Math.random() - 0.5).slice(0, Math.min(3, inglesePool.length)),
-          ...informaticaPool.sort(() => Math.random() - 0.5).slice(0, Math.min(3, informaticaPool.length))
+          ...shuffleArray(dirittoPool).slice(0, Math.min(12, dirittoPool.length)),
+          ...shuffleArray(comunicazionePool).slice(0, Math.min(7, comunicazionePool.length)),
+          ...shuffleArray(inglesePool).slice(0, Math.min(3, inglesePool.length)),
+          ...shuffleArray(informaticaPool).slice(0, Math.min(3, informaticaPool.length))
         ];
 
-        const logPicked = logicaPool.sort(() => Math.random() - 0.5).slice(0, Math.min(8, logicaPool.length));
-        const sitPicked = sitPool.sort(() => Math.random() - 0.5).slice(0, Math.min(7, sitPool.length));
+        const logPicked = shuffleArray(logicaPool).slice(0, Math.min(8, logicaPool.length));
+        const sitPicked = shuffleArray(sitPool).slice(0, Math.min(7, sitPool.length));
 
         // interleave: shuffle all together but keep awareness of totals
-        questions = [...picked, ...logPicked, ...sitPicked].sort(() => Math.random() - 0.5);
+        questions = shuffleArray([...picked, ...logPicked, ...sitPicked]);
+
+        const duplicateCounts = questions.reduce((acc, q) => {
+          acc[q.id] = (acc[q.id] || 0) + 1;
+          return acc;
+        }, {});
+        const dupes = Object.entries(duplicateCounts)
+          .filter(([, count]) => count > 1)
+          .map(([id, count]) => ({ id, count }));
+        const initialCompositionLength = picked.length + logPicked.length + sitPicked.length;
+        const insufficientCategories = [
+          { categoria: 'Diritto_Amministrativo', disponibili: dirittoPool.length, richieste: 12 },
+          { categoria: 'Comunicazione_Istituzionale/Teoria_Comunicazione', disponibili: comunicazionePool.length, richieste: 7 },
+          { categoria: 'Inglese', disponibili: inglesePool.length, richieste: 3 },
+          { categoria: 'Informatica', disponibili: informaticaPool.length, richieste: 3 },
+          { categoria: 'Logica', disponibili: logicaPool.length, richieste: 8 },
+          { categoria: 'Situazionali', disponibili: sitPool.length, richieste: 7 }
+        ].filter(item => item.disponibili < item.richieste);
+
+        console.log('[QUIZ COMPOSITION]', {
+          diritto: questions.filter(q => q.macrocategoria === 'Diritto_Amministrativo').length,
+          comunicazione: questions.filter(q =>
+            q.macrocategoria === 'Comunicazione_Istituzionale' ||
+            q.macrocategoria === 'Teoria_Comunicazione'
+          ).length,
+          inglese: questions.filter(q => q.macrocategoria === 'Inglese').length,
+          informatica: questions.filter(q => q.macrocategoria === 'Informatica').length,
+          logica: questions.filter(q => q.macrocategoria === 'Logica').length,
+          situazionali: questions.filter(q => q.macrocategoria === 'Situazionali').length,
+          totale: questions.length
+        });
+        console.log('[QUIZ DUPLICATES]', dupes);
+        console.log('[QUIZ EXCLUDED AFTER INITIAL COMPOSITION]', initialCompositionLength - questions.length);
+        console.log('[QUIZ LENGTHS]', {
+          picked: picked.length,
+          logPicked: logPicked.length,
+          sitPicked: sitPicked.length,
+          questions: questions.length
+        });
+        console.log('[QUIZ INSUFFICIENT CATEGORIES]', insufficientCategories);
 
         if (!questions.length) { showToast('❌ Nessuna domanda disponibile per la simulazione ufficiale'); return; }
 
@@ -3996,7 +4044,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
         const num = Math.min(parseInt(document.getElementById('cfg-num').value) || 40, pool.length);
         minutes = parseInt(document.getElementById('cfg-time').value) || 60;
         reviewMode = document.getElementById('cfg-review').value;
-        questions = pool.sort(() => Math.random() - 0.5).slice(0, num);
+        questions = shuffleArray(pool).slice(0, num);
       }
 
       quiz = {
