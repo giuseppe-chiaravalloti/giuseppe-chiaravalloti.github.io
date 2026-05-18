@@ -1814,11 +1814,11 @@
           <div class="csv-info">
             <strong style="color:var(--text)">Formato CSV richiesto — colonne obbligatorie:</strong><br>
             <code>domanda</code> · <code>risposta_a</code> · <code>risposta_b</code> · <code>risposta_c</code> ·
-            <code>risposta_d</code> (opzionale) · <code>corretta</code> · <code>macrocategoria</code><br><br>
+            <code>risposta_d</code> (opzionale) · <code>risposta_e</code> (opzionale) · <code>corretta</code> · <code>macrocategoria</code><br><br>
             <strong style="color:var(--text)">Per i quesiti situazionali</strong> usa <code>macrocategoria</code> =
             <code>Situazionali</code> e sostituisci <code>corretta</code> con:<br>
             <code>efficace_alta</code> · <code>efficace_neutra</code> · <code>efficace_bassa</code> (lettere
-            A/B/C/D)<br><br>
+            A/B/C/D/E)<br><br>
             <strong style="color:var(--text)">Categorie standard:</strong> Diritto_Amministrativo ·
             Comunicazione_Istituzionale · Teoria_Comunicazione · Inglese · Logica · Situazionali · Uso_delle_tecnologie
           </div>
@@ -2291,6 +2291,7 @@
         'risposta_b': true,
         'risposta_c': true,
         'risposta_d': true,
+        'risposta_e': true,
         // Risposta corretta
         'corretta': true,
         // Categoria
@@ -2628,6 +2629,11 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
       return q?.isSituazionale || q?.is_situazionale || false;
     }
 
+    function getAnswerLetters(q) {
+      return ['a', 'b', 'c', 'd', 'e']
+        .filter(l => String(q?.['risposta_' + l] ?? '').trim() !== '');
+    }
+
     function catColor(c) { return CAT_COLORS[c] || '#94a3b8'; }
 
     // ============================================================
@@ -2654,7 +2660,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
      * Aggiorna le statistiche di una domanda dopo un quiz completato.
      * Viene chiamato per ogni domanda in finishQuiz.
      */
-    function updateQuestionStats(questionId, isCorrect, isSkipped) {
+    async function updateQuestionStats(questionId, isCorrect, isSkipped) {
       const stats = getStats();
       if (!stats[questionId]) {
         stats[questionId] = { shown: 0, correct: 0, wrong: 0, skipped: 0, mistakeCount: 0, lastSeen: null };
@@ -2678,7 +2684,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
       q.lastSeen = new Date().toISOString();
       stats[questionId] = q;
       saveStats(stats);
-      persistQuestionState(questionId, q);
+      await persistQuestionState(questionId, q);
     }
 
     /**
@@ -2775,19 +2781,30 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
       if (!session || !session.quiz) return null;
 
       const db = getDB();
-      const { questionIds, answers, current, total, timeLeft, reviewMode, mode } = session.quiz;
+      const { questionIds, answers, current, timeLeft, reviewMode, mode } = session.quiz;
 
       // Ricostruisci le domande dai loro IDs
-      const questions = questionIds
-        .map(id => db.find(q => q.id === id))
-        .filter(q => q); // Filtra eventuali domande eliminate
+      const restored = questionIds
+        .map((id, originalIndex) => ({
+          question: db.find(q => q.id === id),
+          answer: Array.isArray(answers) ? answers[originalIndex] ?? null : null,
+          originalIndex
+        }))
+        .filter(item => item.question); // Filtra eventuali domande eliminate
 
-      if (!questions.length) return null; // Sessione invalida
+      if (!restored.length) return null; // Sessione invalida
+
+      const questions = restored.map(item => item.question);
+      const restoredAnswers = restored.map(item => item.answer);
+      const currentEntry = restored.findIndex(item => item.originalIndex === current);
+      const restoredCurrent = currentEntry >= 0
+        ? currentEntry
+        : Math.min(restored.filter(item => item.originalIndex < current).length, questions.length - 1);
 
       return {
         questions,
-        answers,
-        current: Math.min(current, questions.length - 1),
+        answers: restoredAnswers,
+        current: restoredCurrent,
         total: questions.length,
         timeLeft: Math.max(0, timeLeft),
         reviewMode,
@@ -3375,7 +3392,8 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
         let cur = '', inQ = false;
         for (let i = 0; i < line.length; i++) {
           const ch = line[i];
-          if (ch === '"') { inQ = !inQ; }
+          if (ch === '"' && inQ && line[i + 1] === '"') { cur += '"'; i++; }
+          else if (ch === '"') { inQ = !inQ; }
           else if (ch === sep && !inQ) { cells.push(cur.trim()); cur = ''; }
           else cur += ch;
         }
@@ -3415,20 +3433,20 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
           risposta_b: get('risposta_b'),
           risposta_c: get('risposta_c'),
           risposta_d: get('risposta_d'),
+          risposta_e: get('risposta_e'),
           macrocategoria: macro,
           isSituazionale: isSit
         };
         importedQuestions.push(q);
 
         if (isSit) {
-          q.efficace_alta = get('efficace_alta') || get('corretta') || 'A';
-          q.efficace_neutra = get('efficace_neutra') || 'B';
-          q.efficace_bassa = get('efficace_bassa') || 'C';
+          q.efficace_alta = (get('efficace_alta') || get('corretta') || 'A').toUpperCase();
+          q.efficace_neutra = (get('efficace_neutra') || 'B').toUpperCase();
+          q.efficace_bassa = (get('efficace_bassa') || 'C').toUpperCase();
         } else {
           q.corretta = (get('corretta') || '').toUpperCase();
         }
 
-        db.push(q);
         existingKeys.add(domanda.toLowerCase().trim());
         added++;
       }
@@ -3460,6 +3478,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
               risposta_b: q.risposta_b,
               risposta_c: q.risposta_c,
               risposta_d: q.risposta_d,
+              ...(q.risposta_e ? { risposta_e: q.risposta_e } : {}),
               corretta: q.corretta,
               macrocategoria: q.macrocategoria,
               is_situazionale: q.isSituazionale,
@@ -3488,7 +3507,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
         }
       }
 
-      saveDB(db);
+      saveDB([...db, ...importedQuestions]);
       updateHomeStats();
       renderCatChips();
       renderDBTable();
@@ -3768,8 +3787,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
 
       db.forEach((q, i) => {
 
-        const opts = ['A', 'B', 'C', 'D']
-          .filter(l => q['risposta_' + l.toLowerCase()]);
+        const opts = getAnswerLetters(q).map(l => l.toUpperCase());
 
         html += `
           <tr>
@@ -3939,35 +3957,23 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
         minutes = parseInt(document.getElementById('cfg-time-official').value) || 60;
         reviewMode = document.getElementById('cfg-review-official').value;
 
-        // Build official composition: proportional materie + fixed logica + fixed situazionali
-        const materiePool = db.filter(q => MATERIE_CATS.includes(q.macrocategoria));
+        // Build official composition: fixed materie + fixed logica + fixed situazionali
+        const dirittoPool = db.filter(q => q.macrocategoria === 'Diritto_Amministrativo');
+        const comunicazionePool = db.filter(q =>
+          q.macrocategoria === 'Comunicazione_Istituzionale' ||
+          q.macrocategoria === 'Teoria_Comunicazione'
+        );
+        const inglesePool = db.filter(q => q.macrocategoria === 'Inglese');
+        const informaticaPool = db.filter(q => q.macrocategoria === 'Informatica');
         const logicaPool = db.filter(q => q.macrocategoria === 'Logica');
         const sitPool = db.filter(q => q.macrocategoria === 'Situazionali');
 
-        // Proportional distribution across materie subcategories
-        const catCounts = {};
-        MATERIE_CATS.forEach(c => {
-          catCounts[c] = db.filter(q => q.macrocategoria === c).length;
-        });
-        const totAvail = Object.values(catCounts).reduce((a, b) => a + b, 0);
-        const need = Math.min(25, totAvail);
-
-        let picked = [];
-        if (totAvail <= 25) {
-          // take all available
-          picked = [...materiePool].sort(() => Math.random() - 0.5);
-        } else {
-          // proportional pick
-          MATERIE_CATS.forEach(cat => {
-            const quota = Math.round((catCounts[cat] / totAvail) * need);
-            const pool = db.filter(q => q.macrocategoria === cat).sort(() => Math.random() - 0.5);
-            picked.push(...pool.slice(0, quota));
-          });
-          // fill up to 25 if rounding left gaps
-          const remaining = materiePool.filter(q => !picked.includes(q)).sort(() => Math.random() - 0.5);
-          while (picked.length < 25 && remaining.length) picked.push(remaining.shift());
-          picked = picked.slice(0, 25).sort(() => Math.random() - 0.5);
-        }
+        const picked = [
+          ...dirittoPool.sort(() => Math.random() - 0.5).slice(0, Math.min(12, dirittoPool.length)),
+          ...comunicazionePool.sort(() => Math.random() - 0.5).slice(0, Math.min(7, comunicazionePool.length)),
+          ...inglesePool.sort(() => Math.random() - 0.5).slice(0, Math.min(3, inglesePool.length)),
+          ...informaticaPool.sort(() => Math.random() - 0.5).slice(0, Math.min(3, informaticaPool.length))
+        ];
 
         const logPicked = logicaPool.sort(() => Math.random() - 0.5).slice(0, Math.min(8, logicaPool.length));
         const sitPicked = sitPool.sort(() => Math.random() - 0.5).slice(0, Math.min(7, sitPool.length));
@@ -4051,7 +4057,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
           : '🚩 Da eliminare';
       }
 
-      const opts = ['a', 'b', 'c', 'd'].filter(l => q['risposta_' + l]);
+      const opts = getAnswerLetters(q);
       const list = document.getElementById('options-list');
 
       list.innerHTML = opts.map(l => `
@@ -4084,7 +4090,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
 
       if (isSituationalQuestion(q)) {
         // colour all three levels
-        const opts = ['a', 'b', 'c', 'd'].filter(l => q['risposta_' + l]);
+        const opts = getAnswerLetters(q);
         opts.forEach(l => {
           const el = document.getElementById('opt-' + l);
           if (l === letter) {
@@ -4150,6 +4156,8 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
     // FINISH
     // ============================================================
     async function finishQuiz() {
+      if (!quiz || quiz._finishing) return;
+      quiz._finishing = true;
       clearInterval(timerInterval);
       showScreen('screen-results');
 
@@ -4176,12 +4184,12 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
       const scoreMax = document.querySelector('#score-circle .score-max');
 
       // Update question statistics
-      quiz.questions.forEach((q, i) => {
+      await Promise.all(quiz.questions.map((q, i) => {
         const answer = quiz.answers[i];
         const isSkipped = answer === null;
         const isCorrect = !isSkipped && answer.score === SCORING.default.correct;
-        updateQuestionStats(q.id, isCorrect, isSkipped);
-      });
+        return updateQuestionStats(q.id, isCorrect, isSkipped);
+      }));
 
       if (quizMode === 'official') {
         // Normalize to /30 scale
@@ -4246,7 +4254,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
 
         let answersHtml = '';
         if (isSituationalQuestion(q)) {
-          const opts = ['a', 'b', 'c', 'd'].filter(l => q['risposta_' + l]);
+          const opts = getAnswerLetters(q);
           answersHtml = opts.map(l => {
             const ul = l.toUpperCase();
             const isHigh = ul === q.efficace_alta, isNeutral = ul === q.efficace_neutra;
@@ -4258,7 +4266,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
             return `<div class="${cls2}">${ul}. ${q['risposta_' + l]} <em style="opacity:0.6">${lbl}</em>${chosen ? ' ← tua risposta' : ''}</div>`;
           }).join('');
         } else {
-          const opts = ['a', 'b', 'c', 'd'].filter(l => q['risposta_' + l]);
+          const opts = getAnswerLetters(q);
           answersHtml = opts.map(l => {
             const ul = l.toUpperCase();
             const isRight = ul === q.corretta;
@@ -4477,9 +4485,10 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
       );
     }
 
-    function saveBulkAnswers(cat) {
+    async function saveBulkAnswers(cat) {
 
       const db = getDB();
+      const updates = [];
 
       document.querySelectorAll('.bulk-correct')
         .forEach(sel => {
@@ -4492,17 +4501,33 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
 
           if (isSituationalQuestion(q)) {
 
-            q.efficace_alta = sel.value;
+            if (q.efficace_alta !== sel.value) {
+              q.efficace_alta = sel.value;
+              updates.push({ id, fields: { efficace_alta: sel.value } });
+            }
 
           } else {
 
-            q.corretta = sel.value;
+            if (q.corretta !== sel.value) {
+              q.corretta = sel.value;
+              updates.push({ id, fields: { corretta: sel.value } });
+            }
           }
         });
 
       saveDB(db);
 
       updateOfficialPreview();
+
+      if (updates.length && supabaseClient) {
+        const results = await Promise.all(updates.map(update =>
+          persistQuestionGlobal(update.id, update.fields)
+        ));
+        if (results.some(result => !result.success)) {
+          showToast('⚠️ Modifiche salvate localmente, ma alcune non sono sincronizzate');
+          return;
+        }
+      }
 
       showToast('💾 Modifiche salvate');
     }
@@ -4539,7 +4564,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
     function renderEditModal(q) {
       const allCats = [...new Set(getDB().map(x => x.macrocategoria))].filter(Boolean);
       const isSit = isSituationalQuestion(q);
-      const opts = ['a', 'b', 'c', 'd'].filter(l => q['risposta_' + l]);
+      const opts = getAnswerLetters(q);
 
       let html = `
         <div style="margin-bottom:1rem">
@@ -4610,7 +4635,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
       if (idx === -1) { closeEditModal(); return; }
       const q = db[idx];
       const isSit = isSituationalQuestion(q);
-      const editableOpts = ['a', 'b', 'c', 'd'].filter(l => q['risposta_' + l]);
+      const editableOpts = getAnswerLetters(q);
       const newQuestionText = document.getElementById('edit-domanda')?.value.trim();
 
       if (!newQuestionText) {
@@ -4661,7 +4686,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
           q.corretta = sel.value;
         }
       } else {
-        const opts = ['a', 'b', 'c', 'd'].filter(l => q['risposta_' + l]);
+        const opts = getAnswerLetters(q);
         opts.forEach(l => {
           const val = document.getElementById('sit-level-' + l)?.value;
           if (val === 'alta' && q.efficace_alta !== l.toUpperCase()) {
@@ -4828,18 +4853,18 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
     // ============================================================
     function downloadTemplate() {
       const rows = [
-        'domanda,risposta_a,risposta_b,risposta_c,risposta_d,corretta,macrocategoria',
-        '"Qual è il principio sancito dall\'art. 97 della Costituzione?","Principio di legalità","Principio di imparzialità e buon andamento","Principio di uguaglianza","Principio di sussidiarietà",B,Diritto_Amministrativo',
-        '"La legge 150/2000 disciplina:","Il diritto di accesso","Le attività di informazione e comunicazione delle PA","Il codice dei contratti pubblici","La normativa GDPR",B,Comunicazione_Istituzionale',
-        '"What does \'accountability\' mean in public administration?","Responsabilità e rendiconto","Bilancio preventivo","Trasparenza amministrativa","Contratto pubblico",A,Inglese',
-        '"Un team completa un progetto in 30 giorni. Quanti giorni impiegherebbero 5 team identici?",6,5,7,10,A,Logica',
-        '--- ESEMPIO SITUAZIONALE ---,,,,,,',
-        '"Il tuo responsabile ti chiede un report urgente ma hai già un impegno prioritario con un altro dirigente. Cosa fai?","Informo subito entrambi e propongo una soluzione condivisa","Ignoro la richiesta del responsabile","Rimando senza spiegazioni","Delego tutto a un collega",,,Situazionali',
+        'domanda,risposta_a,risposta_b,risposta_c,risposta_d,risposta_e,corretta,macrocategoria',
+        '"Qual è il principio sancito dall\'art. 97 della Costituzione?","Principio di legalità","Principio di imparzialità e buon andamento","Principio di uguaglianza","Principio di sussidiarietà",,B,Diritto_Amministrativo',
+        '"La legge 150/2000 disciplina:","Il diritto di accesso","Le attività di informazione e comunicazione delle PA","Il codice dei contratti pubblici","La normativa GDPR",,B,Comunicazione_Istituzionale',
+        '"What does \'accountability\' mean in public administration?","Responsabilità e rendiconto","Bilancio preventivo","Trasparenza amministrativa","Contratto pubblico",,A,Inglese',
+        '"Un team completa un progetto in 30 giorni. Quanti giorni impiegherebbero 5 team identici?",6,5,7,10,,A,Logica',
+        '--- ESEMPIO SITUAZIONALE ---,,,,,,,',
+        '"Il tuo responsabile ti chiede un report urgente ma hai già un impegno prioritario con un altro dirigente. Cosa fai?","Informo subito entrambi e propongo una soluzione condivisa","Ignoro la richiesta del responsabile","Rimando senza spiegazioni","Delego tutto a un collega",,,,Situazionali',
       ];
 
       // For situazionali, add efficace columns
-      const header2 = 'domanda,risposta_a,risposta_b,risposta_c,risposta_d,efficace_alta,efficace_neutra,efficace_bassa,macrocategoria';
-      const example = '"Il tuo responsabile ti chiede un report urgente ma hai già un impegno prioritario. Cosa fai?","Informo entrambi e propongo soluzione","Rimando senza spiegazioni","Delego a un collega",,A,C,B,Situazionali';
+      const header2 = 'domanda,risposta_a,risposta_b,risposta_c,risposta_d,risposta_e,efficace_alta,efficace_neutra,efficace_bassa,macrocategoria';
+      const example = '"Il tuo responsabile ti chiede un report urgente ma hai già un impegno prioritario. Cosa fai?","Informo entrambi e propongo soluzione","Rimando senza spiegazioni","Delego a un collega",,,A,C,B,Situazionali';
 
       const content = rows.join('\n') + '\n\n# Per i SITUAZIONALI usa questo formato separato:\n' + header2 + '\n' + example;
       const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
