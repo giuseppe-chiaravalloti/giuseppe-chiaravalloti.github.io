@@ -2036,7 +2036,7 @@
 
       const cleanQuestions = questions.map(stripPersonalQuestionFields);
       console.info(`[DB] Cache globale aggiornata da ${source}: ${cleanQuestions.length} domande`);
-      setLocalJSON(GLOBAL_DB_KEY, cleanQuestions);
+      console.info('[DB] Cache globale persistente disabilitata per evitare saturazione localStorage mobile');
       return true;
     }
 
