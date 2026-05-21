@@ -22,7 +22,13 @@
       --neutral: #94a3b8;
       --text: #e2e8f0;
       --text-dim: #64748b;
-      --quiz-action-bar-space: calc(10.5rem + env(safe-area-inset-bottom));
+      --quiz-action-bar-space: calc(11.75rem + env(safe-area-inset-bottom));
+      --quiz-surface: #171a22;
+      --quiz-surface-soft: #1f2430;
+      --quiz-border: #313747;
+      --quiz-success: #75c9a7;
+      --quiz-danger: #e58b8b;
+      --quiz-focus: #8ea7ff;
     }
 
     :root[data-theme="light"] {
@@ -38,7 +44,13 @@
       --neutral: #6b7280;
       --text: #1a1f2e;
       --text-dim: #8892a4;
-      --quiz-action-bar-space: calc(10.5rem + env(safe-area-inset-bottom));
+      --quiz-action-bar-space: calc(11.75rem + env(safe-area-inset-bottom));
+      --quiz-surface: #ffffff;
+      --quiz-surface-soft: #f7f8fb;
+      --quiz-border: #d8dde8;
+      --quiz-success: #2f8f6c;
+      --quiz-danger: #c86666;
+      --quiz-focus: #5f78d8;
     }
 
     * {
@@ -91,6 +103,14 @@
       /* bottom room for mobile nav bar */
       width: 100%;
       min-width: 0;
+    }
+
+    body[data-screen="screen-quiz"]::before {
+      opacity: 0.35;
+    }
+
+    body[data-screen="screen-quiz"] .app {
+      max-width: 1120px;
     }
 
     .app,
@@ -614,7 +634,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0.75rem 0;
+      padding: 0.85rem 0;
       margin-bottom: 0;
       position: sticky;
       top: 57px;
@@ -622,28 +642,29 @@
       background: var(--bg);
       z-index: 40;
       border-bottom: 1px solid var(--border);
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.9rem;
       gap: 0.75rem;
       min-width: 0;
     }
 
     .quiz-progress-text {
       font-family: 'DM Mono', monospace;
-      font-size: 0.84rem;
+      font-size: 0.82rem;
       color: var(--text-dim);
       min-width: 0;
+      letter-spacing: 0.01em;
     }
 
     .timer {
       font-family: 'DM Mono', monospace;
-      font-size: 1rem;
-      color: var(--accent);
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      padding: 0.4rem 0.9rem;
-      border-radius: 8px;
+      font-size: 0.98rem;
+      color: var(--quiz-focus);
+      background: var(--quiz-surface-soft);
+      border: 1px solid var(--quiz-border);
+      padding: 0.48rem 0.95rem;
+      border-radius: 999px;
       transition: color 0.3s;
-      min-width: 68px;
+      min-width: 76px;
       text-align: center;
       flex-shrink: 0;
     }
@@ -654,8 +675,8 @@
     }
 
     .timer.danger {
-      color: var(--red);
-      border-color: rgba(248, 113, 113, 0.3);
+      color: var(--quiz-danger);
+      border-color: color-mix(in srgb, var(--quiz-danger), transparent 58%);
       animation: pulse 1s infinite;
     }
 
@@ -672,15 +693,16 @@
     }
 
     .progress-bar {
-      height: 3px;
-      background: var(--surface2);
-      margin-bottom: 1rem;
+      height: 4px;
+      background: var(--quiz-surface-soft);
+      border-radius: 999px;
+      margin-bottom: 1.15rem;
       overflow: hidden;
     }
 
     .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      background: var(--quiz-focus);
       transition: width 0.4s ease;
     }
 
@@ -690,18 +712,18 @@
     }
 
     .question-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 1.35rem 1.1rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+      background: var(--quiz-surface);
+      border: 1px solid var(--quiz-border);
+      border-radius: 10px;
+      padding: 1.45rem 1.25rem;
+      margin-bottom: 1.15rem;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.06);
     }
 
     .question-meta {
       display: flex;
       gap: 0.6rem;
-      margin-bottom: 0.85rem;
+      margin-bottom: 1rem;
       align-items: center;
       flex-wrap: wrap;
     }
@@ -709,7 +731,7 @@
     .q-num {
       font-family: 'DM Mono', monospace;
       font-size: 0.72rem;
-      color: var(--text-dim);
+      color: var(--neutral);
     }
 
     .q-cat {
@@ -717,9 +739,9 @@
       font-size: 0.65rem;
       padding: 0.2rem 0.55rem;
       border-radius: 100px;
-      background: rgba(79, 124, 255, 0.1);
-      color: var(--accent);
-      border: 1px solid rgba(79, 124, 255, 0.2);
+      background: color-mix(in srgb, var(--quiz-focus), transparent 90%);
+      color: var(--quiz-focus);
+      border: 1px solid color-mix(in srgb, var(--quiz-focus), transparent 76%);
       text-transform: uppercase;
       letter-spacing: 0.05em;
       max-width: 100%;
@@ -729,17 +751,18 @@
     }
 
     .q-cat.situazionale {
-      background: rgba(240, 180, 41, 0.1);
+      background: rgba(240, 180, 41, 0.08);
       color: var(--gold);
-      border-color: rgba(240, 180, 41, 0.2);
+      border-color: rgba(240, 180, 41, 0.18);
     }
 
     .question-text {
-      font-size: 1.05rem;
-      line-height: 1.72;
+      font-size: 1.16rem;
+      line-height: 1.78;
       font-weight: 500;
       overflow-wrap: anywhere;
       text-wrap: pretty;
+      max-width: 72ch;
     }
 
     /* ── OPTIONS ── */
@@ -747,31 +770,32 @@
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 0.6rem;
-      margin-bottom: 1.5rem;
+      gap: 0.82rem;
+      margin-bottom: 1.65rem;
       min-width: 0;
     }
 
     .option-btn {
       display: flex;
       align-items: flex-start;
-      gap: 0.9rem;
-      padding: 1rem 1.05rem;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: var(--surface2);
+      gap: 1rem;
+      padding: 1.08rem 1.15rem;
+      border-radius: 10px;
+      border: 1px solid var(--quiz-border);
+      background: var(--quiz-surface);
       color: var(--text);
       font-family: 'DM Sans', sans-serif;
-      font-size: 0.96rem;
-      line-height: 1.58;
+      font-size: 1rem;
+      line-height: 1.65;
       cursor: pointer;
       text-align: left;
-      transition: all 0.15s;
+      transition: background 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, transform 0.08s ease;
       width: 100%;
-      min-height: 52px;
+      min-height: 62px;
       /* generous touch target */
       min-width: 0;
       overflow-wrap: anywhere;
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03), 0 8px 20px rgba(0, 0, 0, 0.035);
     }
 
     .option-btn span:last-child {
@@ -780,9 +804,9 @@
     }
 
     .option-btn:hover:not(:disabled) {
-      border-color: var(--accent);
-      background: rgba(79, 124, 255, 0.07);
-      box-shadow: 0 0 0 1px rgba(79, 124, 255, 0.12);
+      border-color: color-mix(in srgb, var(--quiz-focus), transparent 35%);
+      background: color-mix(in srgb, var(--quiz-focus), var(--quiz-surface) 93%);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--quiz-focus), transparent 88%);
     }
 
     .option-btn:active:not(:disabled) {
@@ -793,13 +817,13 @@
       font-family: 'DM Mono', monospace;
       font-size: 0.8rem;
       font-weight: 500;
-      color: var(--accent);
-      background: rgba(79, 124, 255, 0.1);
-      border: 1px solid rgba(79, 124, 255, 0.18);
-      border-radius: 8px;
-      width: 2rem;
-      min-width: 2rem;
-      height: 2rem;
+      color: var(--quiz-focus);
+      background: color-mix(in srgb, var(--quiz-focus), transparent 90%);
+      border: 1px solid color-mix(in srgb, var(--quiz-focus), transparent 78%);
+      border-radius: 9px;
+      width: 2.15rem;
+      min-width: 2.15rem;
+      height: 2.15rem;
       padding: 0;
       flex-shrink: 0;
       margin-top: 0.05rem;
@@ -809,23 +833,24 @@
     }
 
     .option-btn.selected {
-      border-color: var(--accent);
-      background: rgba(79, 124, 255, 0.12);
+      border-color: var(--quiz-focus);
+      background: color-mix(in srgb, var(--quiz-focus), var(--quiz-surface) 88%);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--quiz-focus), transparent 84%);
     }
 
     .option-btn.correct {
-      border-color: var(--green);
-      background: rgba(52, 211, 153, 0.1);
+      border-color: var(--quiz-success);
+      background: color-mix(in srgb, var(--quiz-success), var(--quiz-surface) 88%);
     }
 
     .option-btn.wrong {
-      border-color: var(--red);
-      background: rgba(248, 113, 113, 0.1);
+      border-color: var(--quiz-danger);
+      background: color-mix(in srgb, var(--quiz-danger), var(--quiz-surface) 89%);
     }
 
     .option-btn.reveal-correct {
-      border-color: var(--green);
-      background: rgba(52, 211, 153, 0.07);
+      border-color: var(--quiz-success);
+      background: color-mix(in srgb, var(--quiz-success), var(--quiz-surface) 91%);
     }
 
     .option-btn.skipped {
@@ -844,25 +869,26 @@
       left: 0;
       right: 0;
       z-index: 60;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      padding: 0.65rem 1rem calc(0.65rem + env(safe-area-inset-bottom));
+      background: color-mix(in srgb, var(--surface), var(--bg) 7%);
+      border-top: 1px solid var(--quiz-border);
+      padding: 0.8rem 1rem calc(0.8rem + env(safe-area-inset-bottom));
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
-      box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.18);
+      gap: 0.65rem;
+      box-shadow: 0 -14px 34px rgba(0, 0, 0, 0.18);
+      backdrop-filter: blur(12px);
     }
 
     .quiz-actions-secondary {
       display: flex;
-      gap: 0.5rem;
+      gap: 0.55rem;
       flex-wrap: wrap;
       justify-content: center;
     }
 
     .quiz-actions-primary {
       display: flex;
-      gap: 0.6rem;
+      gap: 0.7rem;
       justify-content: flex-end;
       min-width: 0;
     }
@@ -880,13 +906,13 @@
       font-size: 0.8rem;
       color: var(--text-dim);
       cursor: pointer;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 100px;
+      background: var(--quiz-surface-soft);
+      border: 1px solid var(--quiz-border);
+      border-radius: 10px;
       font-family: 'DM Sans', sans-serif;
-      padding: 0.3rem 0.75rem;
+      padding: 0.42rem 0.78rem;
       transition: all 0.18s;
-      min-height: 32px;
+      min-height: 38px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -899,6 +925,34 @@
     .skip-link:hover {
       color: var(--text);
       border-color: var(--text-dim);
+      background: var(--quiz-surface);
+    }
+
+    body[data-screen="screen-quiz"] .btn:focus-visible,
+    body[data-screen="screen-quiz"] .skip-link:focus-visible,
+    body[data-screen="screen-quiz"] .option-btn:focus-visible {
+      outline-color: var(--quiz-focus);
+    }
+
+    body[data-screen="screen-quiz"] .quiz-actions-primary .btn-primary {
+      background: var(--quiz-focus);
+      color: #fff;
+      border: 1px solid transparent;
+    }
+
+    body[data-screen="screen-quiz"] .quiz-actions-primary .btn-primary:hover {
+      background: color-mix(in srgb, var(--quiz-focus), #000 8%);
+    }
+
+    body[data-screen="screen-quiz"] .quiz-actions-primary .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    body[data-screen="screen-quiz"] .quiz-actions-primary .btn-secondary {
+      background: var(--quiz-surface-soft);
+      border-color: var(--quiz-border);
     }
 
     /* ── RESULTS ── */
@@ -984,23 +1038,23 @@
     .review-list {
       display: flex;
       flex-direction: column;
-      gap: 0.85rem;
+      gap: 1rem;
     }
 
     .review-item {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1rem;
+      background: var(--quiz-surface);
+      border: 1px solid var(--quiz-border);
+      border-radius: 10px;
+      padding: 1.1rem;
       min-width: 0;
     }
 
     .review-item.wrong-item {
-      border-color: rgba(248, 113, 113, 0.25);
+      border-color: color-mix(in srgb, var(--quiz-danger), transparent 55%);
     }
 
     .review-item.correct-item {
-      border-color: rgba(52, 211, 153, 0.15);
+      border-color: color-mix(in srgb, var(--quiz-success), transparent 62%);
     }
 
     .review-item.skip-item {
@@ -1008,38 +1062,45 @@
     }
 
     .review-q {
-      font-size: 0.94rem;
-      line-height: 1.62;
-      margin-bottom: 0.75rem;
+      font-size: 1rem;
+      line-height: 1.68;
+      margin-bottom: 0.9rem;
       overflow-wrap: anywhere;
     }
 
     .review-answers {
       display: flex;
       flex-direction: column;
-      gap: 0.35rem;
+      gap: 0.5rem;
     }
 
     .review-ans {
-      font-size: 0.82rem;
-      font-family: 'DM Mono', monospace;
-      padding: 0.45rem 0.65rem;
+      font-size: 0.9rem;
+      font-family: 'DM Sans', sans-serif;
+      padding: 0.62rem 0.75rem;
       border-radius: 8px;
-      background: var(--surface);
-      line-height: 1.45;
+      background: var(--quiz-surface-soft);
+      border: 1px solid transparent;
+      line-height: 1.52;
       overflow-wrap: anywhere;
     }
 
     .review-ans.your-wrong {
-      color: var(--red);
+      color: var(--quiz-danger);
+      border-color: color-mix(in srgb, var(--quiz-danger), transparent 68%);
+      background: color-mix(in srgb, var(--quiz-danger), var(--quiz-surface) 91%);
     }
 
     .review-ans.correct-ans {
-      color: var(--green);
+      color: var(--quiz-success);
+      border-color: color-mix(in srgb, var(--quiz-success), transparent 68%);
+      background: color-mix(in srgb, var(--quiz-success), var(--quiz-surface) 92%);
     }
 
     .review-ans.your-correct {
-      color: var(--green);
+      color: var(--quiz-success);
+      border-color: color-mix(in srgb, var(--quiz-success), transparent 68%);
+      background: color-mix(in srgb, var(--quiz-success), var(--quiz-surface) 92%);
     }
 
     .review-score-badge {
@@ -1392,7 +1453,8 @@
       .quiz-header {
         position: static;
         border-bottom: none;
-        margin-bottom: 1.25rem;
+        margin-bottom: 1.35rem;
+        padding-top: 0.2rem;
       }
 
       .quiz-actions {
@@ -1401,8 +1463,9 @@
         justify-content: space-between;
         background: transparent;
         border-top: none;
-        padding: 0;
+        padding: 0.15rem 0 0;
         box-shadow: none;
+        backdrop-filter: none;
       }
 
       #screen-quiz {
@@ -1422,6 +1485,7 @@
       .quiz-actions-primary .btn,
       .quiz-actions-primary .btn-primary {
         flex: none;
+        min-width: 132px;
       }
 
       .manage-btn-grid {
@@ -1449,27 +1513,40 @@
     }
 
     @media (min-width: 820px) {
+      body[data-screen="screen-quiz"] header {
+        margin-bottom: 1.6rem;
+      }
+
       .question-card {
-        padding: 1.6rem 1.7rem;
+        padding: 2rem 2.2rem;
+        margin-bottom: 1.35rem;
       }
 
       .question-text {
-        font-size: 1.12rem;
+        font-size: 1.28rem;
+        line-height: 1.72;
       }
 
       .options-list {
-        gap: 0.75rem;
+        gap: 0.9rem;
+        margin-bottom: 1.8rem;
       }
 
       .option-btn {
-        padding: 1.05rem 1.2rem;
+        padding: 1.18rem 1.3rem;
+        font-size: 1.03rem;
+        min-height: 66px;
+      }
+
+      .review-item {
+        padding: 1.35rem 1.45rem;
       }
     }
 
     @media (max-width: 520px) {
       .app {
-        padding-left: 0.75rem;
-        padding-right: 0.75rem;
+        padding-left: 0.7rem;
+        padding-right: 0.7rem;
       }
 
       header {
@@ -1517,43 +1594,51 @@
       }
 
       .question-card {
-        padding: 1.15rem 1rem;
+        padding: 1.25rem 1rem;
+        margin-bottom: 1rem;
       }
 
       .question-text {
-        font-size: 1.02rem;
-        line-height: 1.68;
+        font-size: 1.08rem;
+        line-height: 1.72;
       }
 
       .option-btn {
-        gap: 0.75rem;
-        padding: 0.9rem;
-        font-size: 0.94rem;
-        line-height: 1.55;
-        border-radius: 11px;
+        gap: 0.8rem;
+        padding: 1rem 0.95rem;
+        font-size: 0.98rem;
+        line-height: 1.6;
+        border-radius: 10px;
+        min-height: 64px;
       }
 
       .option-letter {
-        width: 1.85rem;
-        min-width: 1.85rem;
-        height: 1.85rem;
+        width: 2rem;
+        min-width: 2rem;
+        height: 2rem;
       }
 
       .quiz-actions-secondary {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.45rem;
+        gap: 0.5rem;
       }
 
       .skip-link {
         width: 100%;
-        min-height: 36px;
-        padding: 0.35rem 0.55rem;
+        min-height: 42px;
+        padding: 0.45rem 0.55rem;
+        font-size: 0.78rem;
       }
 
       .quiz-actions-primary .btn {
         padding-left: 0.75rem;
         padding-right: 0.75rem;
+        min-height: 50px;
+      }
+
+      .quiz-actions-primary .btn-primary {
+        font-size: 0.96rem;
       }
 
       .result-pills {
@@ -1621,11 +1706,11 @@
       }
 
       .question-text {
-        font-size: 1rem;
+        font-size: 1.02rem;
       }
 
       .option-btn {
-        padding: 0.85rem;
+        padding: 0.95rem 0.85rem;
       }
     }
   </style>
@@ -1927,14 +2012,13 @@
       <!-- Fixed bottom bar on mobile, inline on desktop -->
       <div class="quiz-actions">
         <div class="quiz-actions-secondary">
-          <button class="skip-link" onclick="skipQuestion()">Salta →</button>
-          <button class="skip-link" onclick="openEditQuestionModal()" style="color:var(--gold)">✏️ Errore</button>
-          <button class="skip-link" onclick="toggleFavoriteCurrentQuestion()" style="color:var(--accent2)">⭐
-            Preferita</button>
-          <button class="skip-link" onclick="toggleFlagCurrentQuestion()" style="color:var(--red)">🚩 Elimina</button>
+          <button class="skip-link" onclick="skipQuestion()">Salta</button>
+          <button class="skip-link" onclick="openEditQuestionModal()">Segnala</button>
+          <button class="skip-link" onclick="toggleFavoriteCurrentQuestion()">Preferita</button>
+          <button class="skip-link" onclick="toggleFlagCurrentQuestion()">Elimina</button>
         </div>
         <div class="quiz-actions-primary">
-          <button class="btn btn-secondary" onclick="confirmAbort()">Abbandona</button>
+          <button class="btn btn-secondary" onclick="confirmAbort()">Esci</button>
           <button class="btn btn-primary" id="btn-next" onclick="nextQuestion()" disabled>Avanti →</button>
         </div>
       </div>
@@ -3070,6 +3154,9 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
 
       const isFavorite = db[idx].favorite;
       showToast(isFavorite ? '⭐ Aggiunto ai preferiti' : '☆ Rimosso dai preferiti');
+
+      const favoriteBtn = document.querySelector('.quiz-actions .skip-link[onclick="toggleFavoriteCurrentQuestion()"]');
+      if (favoriteBtn) favoriteBtn.textContent = isFavorite ? 'Preferita ✓' : 'Preferita';
 
       renderDBTable();
       saveQuizSession(); // Aggiorna sessione se in quiz
@@ -4399,8 +4486,13 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
       const flagBtn = document.querySelector('.quiz-actions .skip-link[onclick="toggleFlagCurrentQuestion()"]');
       if (flagBtn) {
         flagBtn.textContent = q.flaggedForDeletion
-          ? '🚩 Contrassegnata'
-          : '🚩 Da eliminare';
+          ? 'Segnalata'
+          : 'Elimina';
+      }
+
+      const favoriteBtn = document.querySelector('.quiz-actions .skip-link[onclick="toggleFavoriteCurrentQuestion()"]');
+      if (favoriteBtn) {
+        favoriteBtn.textContent = q.favorite ? 'Preferita ✓' : 'Preferita';
       }
 
       const opts = getRuntimeOptions(q);
@@ -4655,6 +4747,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
     function showScreen(id) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById(id).classList.add('active');
+      if (document.body?.dataset) document.body.dataset.screen = id;
     }
 
     function goHome() {
@@ -5165,8 +5258,8 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
         const btn = document.querySelector('.quiz-actions .skip-link[onclick="toggleFlagCurrentQuestion()"]');
         if (btn) {
           btn.textContent = isFlagged
-            ? '🚩 Contrassegnata'
-            : '🚩 Da eliminare';
+            ? 'Segnalata'
+            : 'Elimina';
         }
       }
     }
