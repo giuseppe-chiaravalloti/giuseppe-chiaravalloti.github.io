@@ -2733,6 +2733,75 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
         .filter(l => String(q?.['risposta_' + l] ?? '').trim() !== '');
     }
 
+    const RUNTIME_OPTION_LETTERS = ['A', 'B', 'C', 'D', 'E'];
+
+    function buildRuntimeOptions(q, savedOptions = null) {
+      const originalLetters = getAnswerLetters(q).map(l => l.toUpperCase());
+      const hasSavedOptions = Array.isArray(savedOptions) && savedOptions.length > 0;
+      const orderedOriginalLetters = hasSavedOptions
+        ? savedOptions
+          .map(opt => String(opt?.originalLetter || '').toUpperCase())
+          .filter(l => originalLetters.includes(l))
+          .filter((l, index, arr) => arr.indexOf(l) === index)
+        : [];
+
+      const sourceLetters = hasSavedOptions ? orderedOriginalLetters : shuffleArray(originalLetters);
+      originalLetters.forEach(l => {
+        if (!sourceLetters.includes(l)) sourceLetters.push(l);
+      });
+
+      return sourceLetters.map((originalLetter, index) => ({
+        runtimeLetter: RUNTIME_OPTION_LETTERS[index],
+        originalLetter,
+        text: q['risposta_' + originalLetter.toLowerCase()]
+      }));
+    }
+
+    function prepareRuntimeQuestion(q, savedRuntime = null) {
+      const runtimeQuestion = { ...q };
+      runtimeQuestion.shuffledOptions = buildRuntimeOptions(q, savedRuntime?.shuffledOptions);
+
+      const runtimeByOriginal = runtimeQuestion.shuffledOptions.reduce((acc, opt) => {
+        acc[opt.originalLetter] = opt.runtimeLetter;
+        return acc;
+      }, {});
+
+      runtimeQuestion.correctRuntimeLetter = runtimeByOriginal[String(q.corretta || '').toUpperCase()] || null;
+      runtimeQuestion.efficaceRuntime = {
+        alta: runtimeByOriginal[String(q.efficace_alta || '').toUpperCase()] || null,
+        neutra: runtimeByOriginal[String(q.efficace_neutra || '').toUpperCase()] || null,
+        bassa: runtimeByOriginal[String(q.efficace_bassa || '').toUpperCase()] || null
+      };
+
+      return runtimeQuestion;
+    }
+
+    function prepareRuntimeQuestions(questions, savedRuntimeById = {}) {
+      return questions.map(q => prepareRuntimeQuestion(q, savedRuntimeById[q.id]));
+    }
+
+    function hasRuntimeLayer(q) {
+      return Array.isArray(q?.shuffledOptions)
+        && q.shuffledOptions.length > 0
+        && typeof q.correctRuntimeLetter !== 'undefined'
+        && q.efficaceRuntime;
+    }
+
+    function ensureRuntimeQuestions(questions) {
+      return questions.map(q => hasRuntimeLayer(q) ? q : prepareRuntimeQuestion(q, q));
+    }
+
+    function getRuntimeOptions(q) {
+      return Array.isArray(q?.shuffledOptions) && q.shuffledOptions.length
+        ? q.shuffledOptions
+        : buildRuntimeOptions(q);
+    }
+
+    function getOriginalLetterFromRuntime(q, runtimeLetter) {
+      const opt = getRuntimeOptions(q).find(o => o.runtimeLetter === String(runtimeLetter || '').toUpperCase());
+      return opt?.originalLetter || null;
+    }
+
     function shuffleArray(arr) {
       const shuffled = arr.slice();
       for (let i = shuffled.length - 1; i > 0; i--) {
@@ -2868,6 +2937,13 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
         quiz: {
           // Salviamo solo le domande come IDs + metadati essenziali
           questionIds: quiz.questions.map(q => q.id),
+          questionRuntime: quiz.questions.map(q => ({
+            id: q.id,
+            shuffledOptions: getRuntimeOptions(q).map(opt => ({
+              runtimeLetter: opt.runtimeLetter,
+              originalLetter: opt.originalLetter
+            }))
+          })),
           answers: quiz.answers,
           current: quiz.current,
           total: quiz.total,
@@ -2890,7 +2966,8 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
       if (!session || !session.quiz) return null;
 
       const db = getDB();
-      const { questionIds, answers, current, timeLeft, reviewMode, completedStudyQuestions, mode } = session.quiz;
+      const { questionIds, questionRuntime, answers, current, timeLeft, reviewMode, completedStudyQuestions, mode } = session.quiz;
+      const hasRuntimeMetadata = Array.isArray(questionRuntime);
 
       // Ricostruisci le domande dai loro IDs
       const restored = questionIds
@@ -2903,7 +2980,12 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
 
       if (!restored.length) return null; // Sessione invalida
 
-      const questions = restored.map(item => item.question);
+      const questions = restored.map(item => {
+        const savedRuntime = hasRuntimeMetadata
+          ? questionRuntime[item.originalIndex]
+          : { shuffledOptions: getAnswerLetters(item.question).map(l => ({ originalLetter: l.toUpperCase() })) };
+        return prepareRuntimeQuestion(item.question, savedRuntime);
+      });
       const restoredAnswers = restored.map(item => item.answer);
       const currentEntry = restored.findIndex(item => item.originalIndex === current);
       const restoredCurrent = currentEntry >= 0
@@ -3556,6 +3638,10 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
         return;
       }
       startQuiz();
+      if (quizMode === 'study' && quiz?.questions?.length) {
+        quiz.questions = ensureRuntimeQuestions(quiz.questions);
+        saveQuizSession();
+      }
     }
 
     // ============================================================
@@ -4242,6 +4328,8 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
         questions = shuffleArray(pool).slice(0, num);
       }
 
+      questions = prepareRuntimeQuestions(questions);
+
       quiz = {
         questions,
         answers: new Array(questions.length).fill(null),
@@ -4266,7 +4354,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
       const isCorrect = !isSkipped && answer && (
         isSituationalQuestion(q)
           ? answer.score === SCORING.Situazionali.high
-          : answer.letter.toUpperCase() === q.corretta
+          : answer.score === SCORING.default.correct
       );
       quiz.completedStudyQuestions = quiz.completedStudyQuestions || {};
       quiz.completedStudyQuestions[quiz.current] = true;
@@ -4315,14 +4403,14 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
           : '🚩 Da eliminare';
       }
 
-      const opts = getAnswerLetters(q);
+      const opts = getRuntimeOptions(q);
       const list = document.getElementById('options-list');
 
-      list.innerHTML = opts.map(l => `
+      list.innerHTML = opts.map(opt => `
     <li>
-      <button class="option-btn" id="opt-${l}" onclick="selectAnswer('${l}')">
-        <span class="option-letter">${l.toUpperCase()}</span>
-        <span>${q['risposta_' + l]}</span>
+      <button class="option-btn" id="opt-${opt.runtimeLetter.toLowerCase()}" onclick="selectAnswer('${opt.runtimeLetter}')">
+        <span class="option-letter">${opt.runtimeLetter}</span>
+        <span>${escapeHTML(opt.text)}</span>
       </button>
     </li>
   `).join('');
@@ -4333,8 +4421,8 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
         revealAnswer(letter);
       } else {
         document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
-        document.getElementById('opt-' + letter).classList.add('selected');
-        quiz._pendingAnswer = letter;
+        document.getElementById('opt-' + letter.toLowerCase()).classList.add('selected');
+        quiz._pendingAnswer = letter.toUpperCase();
         document.getElementById('btn-next').disabled = false;
       }
     }
@@ -4348,21 +4436,23 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
 
       if (isSituationalQuestion(q)) {
         // colour all three levels
-        const opts = getAnswerLetters(q);
-        opts.forEach(l => {
-          const el = document.getElementById('opt-' + l);
-          if (l === letter) {
-            if (l.toUpperCase() === q.efficace_alta) el.classList.add('correct');
-            else if (l.toUpperCase() === q.efficace_neutra) el.classList.add('selected'); // neutral highlight
+        const opts = getRuntimeOptions(q);
+        const high = q.efficaceRuntime?.alta;
+        const neutral = q.efficaceRuntime?.neutra;
+        opts.forEach(opt => {
+          const l = opt.runtimeLetter;
+          const el = document.getElementById('opt-' + l.toLowerCase());
+          if (l === letter.toUpperCase()) {
+            if (l === high) el.classList.add('correct');
+            else if (l === neutral) el.classList.add('selected'); // neutral highlight
             else el.classList.add('wrong');
           }
-          if (l.toUpperCase() === q.efficace_alta) el.classList.add('reveal-correct');
+          if (l === high) el.classList.add('reveal-correct');
         });
       } else {
-        const chosen = document.getElementById('opt-' + letter);
-        const correct = document.getElementById(
-          'opt-' + ((q.corretta || '').toLowerCase())
-        ); if (letter.toUpperCase() === q.corretta) {
+        const chosen = document.getElementById('opt-' + letter.toLowerCase());
+        const correct = document.getElementById('opt-' + String(q.correctRuntimeLetter || '').toLowerCase());
+        if (letter.toUpperCase() === q.correctRuntimeLetter) {
           chosen.classList.add('correct');
         } else {
           chosen.classList.add('wrong');
@@ -4406,11 +4496,11 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
     function computeScore(q, letter) {
       if (isSituationalQuestion(q)) {
         const ul = letter.toUpperCase();
-        if (ul === q.efficace_alta) return SCORING.Situazionali.high;
-        if (ul === q.efficace_neutra) return SCORING.Situazionali.neutral;
+        if (ul === q.efficaceRuntime?.alta) return SCORING.Situazionali.high;
+        if (ul === q.efficaceRuntime?.neutra) return SCORING.Situazionali.neutral;
         return SCORING.Situazionali.low;
       }
-      return letter.toUpperCase() === q.corretta ? SCORING.default.correct : SCORING.default.wrong;
+      return letter.toUpperCase() === q.correctRuntimeLetter ? SCORING.default.correct : SCORING.default.wrong;
     }
 
     // ============================================================
@@ -4515,7 +4605,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
         const isSkip = ans === null;
         const letter = isSkip ? null : ans.letter.toUpperCase();
         const sc = isSkip ? 0 : ans.score;
-        const isCorrect = !isSkip && (isSituationalQuestion(q) ? ans.score === SCORING.Situazionali.high : letter === q.corretta);
+        const isCorrect = !isSkip && (isSituationalQuestion(q) ? ans.score === SCORING.Situazionali.high : letter === q.correctRuntimeLetter);
         const isWrong = !isSkip && sc < 0;
         const cls = isSkip ? 'skip-item' : isCorrect ? 'correct-item' : isWrong ? 'wrong-item' : '';
         const scoreColor = sc > 0 ? 'var(--green)' : sc < 0 ? 'var(--red)' : 'var(--text-dim)';
@@ -4523,27 +4613,27 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
 
         let answersHtml = '';
         if (isSituationalQuestion(q)) {
-          const opts = getAnswerLetters(q);
-          answersHtml = opts.map(l => {
-            const ul = l.toUpperCase();
-            const isHigh = ul === q.efficace_alta, isNeutral = ul === q.efficace_neutra;
+          const opts = getRuntimeOptions(q);
+          answersHtml = opts.map(opt => {
+            const ul = opt.runtimeLetter;
+            const isHigh = ul === q.efficaceRuntime?.alta, isNeutral = ul === q.efficaceRuntime?.neutra;
             const chosen = ul === letter;
             let cls2 = 'review-ans';
             if (chosen && sc < 0) cls2 += ' your-wrong';
             if (chosen && isHigh) cls2 += ' your-correct';
             const lbl = isHigh ? '★ più efficace' : isNeutral ? '◇ neutra' : '✗ meno efficace';
-            return `<div class="${cls2}">${ul}. ${q['risposta_' + l]} <em style="opacity:0.6">${lbl}</em>${chosen ? ' ← tua risposta' : ''}</div>`;
+            return `<div class="${cls2}">${ul}. ${escapeHTML(opt.text)} <em style="opacity:0.6">${lbl}</em>${chosen ? ' ← tua risposta' : ''}</div>`;
           }).join('');
         } else {
-          const opts = getAnswerLetters(q);
-          answersHtml = opts.map(l => {
-            const ul = l.toUpperCase();
-            const isRight = ul === q.corretta;
+          const opts = getRuntimeOptions(q);
+          answersHtml = opts.map(opt => {
+            const ul = opt.runtimeLetter;
+            const isRight = ul === q.correctRuntimeLetter;
             const chosen = ul === letter;
             let cls2 = 'review-ans';
             if (chosen && !isRight) cls2 += ' your-wrong';
             if (isRight) cls2 += ' correct-ans';
-            return `<div class="${cls2}">${ul}. ${q['risposta_' + l]}${chosen && !isRight ? ' ← tua risposta' : ''}${isRight ? ' ✓' : ''}</div>`;
+            return `<div class="${cls2}">${ul}. ${escapeHTML(opt.text)}${chosen && !isRight ? ' ← tua risposta' : ''}${isRight ? ' ✓' : ''}</div>`;
           }).join('');
         }
 
@@ -4994,7 +5084,7 @@ UPDATE public.questions SET deleted_globally = false WHERE deleted_globally IS N
       // Also update live quiz if editing from quiz screen
       if (quiz) {
         const qi = quiz.questions.findIndex(x => x.id === editingQuestionId);
-        if (qi !== -1) quiz.questions[qi] = q;
+        if (qi !== -1) quiz.questions[qi] = prepareRuntimeQuestion(q, quiz.questions[qi]);
       }
 
       updateHomeStats();
